@@ -1,0 +1,20 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Products by Brand: {{ brand.name }}</h2>
+  {% if products %}
+    <ul class="list-group">
+      {% for product in products %}
+        <li class="list-group-item">
+          <a href="{% url 'get_product' slug=product.slug %}">
+            {{ product.product_name }}
+          </a> - Rs.{{ product.price }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted">No products found for this brand.</p>
+  {% endif %}
+</div>
+{% endblock %}

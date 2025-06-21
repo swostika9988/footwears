@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Admin Dashboard{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      min-height: 100vh;  /* allow body to grow with content */
+      height: auto;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      display: flex;
+      background-color: #f8f9fa;
+      align-items: stretch; /* make children same height */
+      /* no fixed height */
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: #212529;
+      color: white;
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0; /* prevent sidebar from shrinking */
+    }
+
+    .sidebar h4 {
+      margin-bottom: 2rem;
+      text-align: center;
+      font-size: 1.4rem;
+      color: #f8f9fa;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      display: block;
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      position: relative;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background-color: #495057;
+      transform: scale(1.05);
+    }
+
+    .sidebar a:hover::after {
+      content: '→';
+      position: absolute;
+      right: 15px;
+      font-weight: bold;
+    }
+
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh; /* optional min height */
+      /* no fixed height */
+    }
+
+    .content-wrapper {
+      flex-grow: 1;
+      padding: 2rem;
+    }
+
+    h2 {
+      margin-bottom: 1.5rem;
+      color: #343a40;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 14px;
+      background-color: #dee2e6;
+      border-top: 1px solid #ced4da;
+      color: #495057;
+    }
+
+    @media screen and (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      .sidebar a {
+        display: inline-block;
+        margin: 0 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h4>Dashboard of Footwear's</h4>
+    <a href="{% url 'dashboard' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">🏠 Home</a>
+    <a href="{% url 'product_list' %}" class="{% if request.path == '/dashboard/products/' %}active{% endif %}">👟 Products</a>
+    <a href="{% url 'add_product' %}" class="{% if request.path == '/dashboard/add_product/' %}active{% endif %}">➕ Add Product</a>
+    <a href="{% url 'categories' %}" class="{% if request.path == '/dashboard/categories/' %}active{% endif %}">📁 Categories</a>
+    <a href="{% url 'add_category' %}" class="{% if request.path == '/dashboard/add_category/' %}active{% endif %}">➕ Add Category</a>
+    <a href="{% url 'dashboard_reviews' %}" class="{% if request.path == '/dashboard/reviews/' %}active{% endif %}">📝 Reviews</a>
+
+    <a href="{% url 'account_logout' %}">🚪 Logout</a>
+  </div>
+
+  <div class="main-content">
+    <div class="content-wrapper">
+      {% block content %}
+      <h2>Welcome to the Admin Dashboard</h2>
+      <p>Select an option from the sidebar to manage your footwear store.</p>
+      {% endblock %}
+    </div>
+
+    <div class="footer">
+      &copy; 2025 Footwears Admin Panel. All rights reserved.
+    </div>
+  </div>
+
+</body>
+</html>

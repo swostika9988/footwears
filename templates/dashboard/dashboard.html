@@ -1,0 +1,156 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Dashboard - Footwear{% endblock %}
+
+{% block content %}
+<h1>Dashboard Analytics</h1>
+
+<style>
+    .card-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1.8rem;
+        margin-top: 1rem;
+    }
+    .card {
+        background: #fff;
+        padding: 1.8rem 1.5rem;
+        border-radius: 14px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.07);
+        width: 380px;       /* increased width */
+        height: 320px;      /* increased height */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+    }
+    .card.full-width {
+        width: 100%;
+        max-width: 960px;
+        height: 320px;
+    }
+    h3 {
+        margin-bottom: 0.8rem;
+        color: #222;
+        font-weight: 700;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        letter-spacing: 0.03em;
+    }
+    canvas {
+        flex-grow: 1;
+    }
+</style>
+
+<div class="card-container">
+    <!-- Pie Chart: Products per Category -->
+    <div class="card">
+        <h3>Products per Category</h3>
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <!-- Bar Chart: Total Price per Category -->
+    <div class="card">
+        <h3>Total Price per Category</h3>
+        <canvas id="barChart"></canvas>
+    </div>
+
+    <!-- Line Chart: Reviews per Product -->
+    <div class="card full-width">
+        <h3>Reviews per Product</h3>
+        <canvas id="lineChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Pass Django data into JS variables
+    const categoryNames = {{ category_names|safe }};
+    const productsPerCategory = {{ products_per_category|safe }};
+    const totalPricePerCategory = {{ total_price_per_category|safe }};
+    const productNames = {{ product_names|safe }};
+    const productReviewsCount = {{ product_reviews_count|safe }};
+
+    // Pie Chart: Products per Category
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: categoryNames,
+            datasets: [{
+                label: 'Products',
+                data: productsPerCategory,
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                ],
+                borderWidth: 1,
+                borderColor: '#fff',
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // Bar Chart: Total Price per Category
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: categoryNames,
+            datasets: [{
+                label: 'Total Price',
+                data: totalPricePerCategory,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 50 }
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Line Chart: Reviews per Product
+    const lineCtx = document.getElementById('lineChart').getContext('2d');
+    new Chart(lineCtx, {
+        type: 'line',
+        data: {
+            labels: productNames,
+            datasets: [{
+                label: 'Reviews Count',
+                data: productReviewsCount,
+                fill: false,
+                borderColor: '#FF6384',
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, stepSize: 1 }
+            },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { enabled: true }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

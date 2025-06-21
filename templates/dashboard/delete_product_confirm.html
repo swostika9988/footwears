@@ -1,0 +1,57 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Confirm Delete Product{% endblock %}
+
+{% block content %}
+<style>
+  .confirm-box {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 30px;
+    border: 1px solid #ddd;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+  .confirm-box h2 {
+    margin-bottom: 20px;
+    color: #dc3545;
+  }
+  .btn {
+    display: inline-block;
+    margin: 10px 15px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+  }
+  .btn-danger:hover {
+    background-color: #a71d2a;
+  }
+  .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+  }
+  .btn-secondary:hover {
+    background-color: #565e64;
+  }
+</style>
+
+<div class="confirm-box">
+  <h2>Delete Product</h2>
+  <p>Are you sure you want to delete the product: <strong>{{ product.product_name }}</strong>?</p>
+  <form method="post" style="margin-top: 20px;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a href="{% url 'product_list' %}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

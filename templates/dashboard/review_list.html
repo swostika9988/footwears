@@ -1,0 +1,111 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}All Reviews{% endblock %}
+
+{% block content %}
+<style>
+  .reviews-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    background: #f9f9f9;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
+  .reviews-container h2 {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+  table.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+  }
+  thead.table-dark {
+    background-color: #343a40;
+    color: #fff;
+    border-radius: 8px;
+  }
+  thead.table-dark th {
+    padding: 12px 15px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  tbody tr {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  tbody tr:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+  }
+  tbody td {
+    padding: 14px 15px;
+    vertical-align: middle;
+    color: #555;
+    border-top: none;
+  }
+  tbody td a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  tbody td a:hover {
+    text-decoration: underline;
+  }
+  tbody td[title] {
+    cursor: help;
+  }
+  /* Responsive */
+  @media (max-width: 768px) {
+    .reviews-container {
+      padding: 1rem;
+    }
+    thead.table-dark th, tbody td {
+      padding: 10px 8px;
+    }
+  }
+</style>
+
+<div class="reviews-container">
+  <h2>All Product Reviews</h2>
+
+  {% if reviews %}
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>User</th>
+          <th>Product</th>
+          <th>Rating</th>
+          <th>Comment</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for review in reviews %}
+        <tr>
+          <td>{{ review.user.username }}</td>
+          <td>
+            <a href="{% url 'get_product' review.product.slug %}" target="_blank">
+              {{ review.product.product_name }}
+            </a>
+          </td>
+          <td>{{ review.stars }}/5</td>
+          <td title="{{ review.content }}">{{ review.content|truncatechars:50 }}</td>
+          <td>{{ review.date_added|date:"M d, Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted text-center">No reviews found.</p>
+  {% endif %}
+</div>
+{% endblock %}

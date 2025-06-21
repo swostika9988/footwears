@@ -1,0 +1,78 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Edit Product{% endblock %}
+
+{% block content %}
+<h2 style="text-align:center; margin-top: 20px; font-family: Arial, sans-serif;">Edit Product</h2>
+
+<style>
+  form {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+  }
+
+  label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  button {
+    margin-top: 20px;
+    padding: 10px 18px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  a.cancel-btn {
+    display: inline-block;
+    margin-left: 15px;
+    padding: 10px 18px;
+    background-color: #6c757d;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1rem;
+  }
+
+  a.cancel-btn:hover {
+    background-color: #5a6268;
+  }
+</style>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.as_p }}
+
+  <button type="submit">Save Changes</button>
+  <a href="{% url 'product_list' %}" class="cancel-btn">Cancel</a>
+</form>
+{% endblock %}

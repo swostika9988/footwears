@@ -1,0 +1,379 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block start %}
+
+<!-- 🟦 Carousel -->
+<div id="shoeCarousel" class="carousel slide carousel-fade mb-5" data-bs-ride="carousel" data-bs-interval="3000">
+  <div class="carousel-inner rounded shadow overflow-hidden" style="max-height: 500px;">
+    <div class="carousel-item active">
+      <img src="{% static 'images/img.png' %}" class="d-block w-100 object-fit-cover" alt="Shoe 1">
+    </div>
+    <div class="carousel-item">
+      <img src="{% static 'images/img2.png' %}" class="d-block w-100 object-fit-cover" alt="Shoe 2">
+    </div>
+    <div class="carousel-item">
+      <img src="{% static 'images/img3.png' %}" class="d-block w-100 object-fit-cover" alt="Shoe 3">
+    </div>
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#shoeCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#shoeCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+  </button>
+</div>
+
+<!-- 🟨 Benefits -->
+<div class="container mb-5 text-center">
+  <div class="row g-3">
+    <div class="col-md-3">
+      <div class="p-3 border rounded shadow-sm bg-light">
+        <img src="{% static 'images/free.jpg' %}" width="40" alt="Delivery">
+        <h6 class="mt-2">Free Delivery</h6>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="p-3 border rounded shadow-sm bg-light">
+        <img src="{% static 'images/easy.jpg' %}" width="40" alt="Returns">
+        <h6 class="mt-2">Easy Returns</h6>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="p-3 border rounded shadow-sm bg-light">
+        <img src="{% static 'images/best.png' %}" width="40" alt="Best Prices">
+        <h6 class="mt-2">Best Prices</h6>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="p-3 border rounded shadow-sm bg-light">
+        <img src="{% static 'images/brand.png' %}" width="40" alt="Top Brands">
+        <h6 class="mt-2">Top Brands</h6>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 👨‍💼 About & 📞 Contact -->
+<div class="container mb-5">
+  <div class="row text-center">
+    <div class="col-md-6 p-4 bg-light border rounded shadow-sm mb-3">
+      <h2>About Us</h2>
+      <p class="text-muted">We offer the latest and most stylish footwear for every occasion. Comfort meets fashion in every step.</p>
+      <a href="{% url 'about' %}" class="btn btn-outline-primary">Learn More</a>
+    </div>
+    <div class="col-md-6 p-4 bg-light border rounded shadow-sm mb-3">
+      <h2>Contact Us</h2>
+      <p class="text-muted">Questions? Reach out — we’re always happy to help you find the perfect fit.</p>
+      <a href="{% url 'contact' %}" class="btn btn-outline-success">Get in Touch</a>
+    </div>
+  </div>
+</div>
+
+<!-- 🏷️ Top Brands Section -->
+<div class="container mb-5">
+  <h3 class="text-center mb-4">Top Brands</h3>
+  <div class="d-flex flex-wrap justify-content-center">
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden brand-card h-100">
+        <img src="{% static 'images/brands/add.jpg' %}" class="w-100" style="height: 200px; object-fit: cover;" alt="Adidas">
+        <div class="card-body text-center">
+          <h5 class="card-title mb-1">Adidas</h5>
+          <p class="text-muted small">Up to 30% Off</p>
+        </div>
+      </div>
+    </div>
+    <!-- Nike -->
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden brand-card h-100">
+        <img src="{% static 'images/brands/nike.jpg' %}" class="w-100" style="height: 200px; object-fit: cover;" alt="Nike">
+        <div class="card-body text-center">
+          <h5 class="card-title mb-1">Nike</h5>
+          <p class="text-muted small">Flat 25% Off</p>
+        </div>
+      </div>
+    </div>
+    <!-- Puma -->
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden brand-card h-100">
+        <img src="{% static 'images/brands/puma.jpg' %}" class="w-100" style="height: 200px; object-fit: cover;" alt="Puma">
+        <div class="card-body text-center">
+          <h5 class="card-title mb-1">Puma</h5>
+          <p class="text-muted small">Buy 1 Get 1</p>
+        </div>
+      </div>
+    </div>
+    <!-- Bata -->
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden brand-card h-100">
+        <img src="{% static 'images/brands/bata.jpg' %}" class="w-100" style="height: 200px; object-fit: cover;" alt="Bata">
+        <div class="card-body text-center">
+          <h5 class="card-title mb-1">Bata</h5>
+          <p class="text-muted small">New Arrivals</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🖼️ Trending Collection Slider -->
+<div id="trendingSlider" class="carousel slide carousel-dark mb-5" data-bs-ride="carousel">
+  <!-- Indicators/Dots -->
+  <div class="carousel-indicators">
+    <button type="button" data-bs-target="#trendingSlider" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+    <button type="button" data-bs-target="#trendingSlider" data-bs-slide-to="1" aria-label="Slide 2"></button>
+    <button type="button" data-bs-target="#trendingSlider" data-bs-slide-to="2" aria-label="Slide 3"></button>
+  </div>
+
+  <!-- Slides -->
+  <div class="carousel-inner rounded shadow overflow-hidden" style="max-height: 450px;">
+    <div class="carousel-item active">
+      <img src="{% static 'images/brand1.jpg' %}" class="d-block w-100 object-fit-cover" alt="Trending 1">
+    </div>
+    <div class="carousel-item">
+      <img src="{% static 'images/brand2.jpg' %}" class="d-block w-100 object-fit-cover" alt="Trending 2">
+    </div>
+    <div class="carousel-item">
+      <img src="{% static 'images/brand3.jpg' %}" class="d-block w-100 object-fit-cover" alt="Trending 3">
+    </div>
+  </div>
+
+  
+
+  <!-- Controls -->
+  <button class="carousel-control-prev" type="button" data-bs-target="#trendingSlider" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#trendingSlider" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+  </button>
+</div>
+
+<!-- 🏷️ Global Brands Section (Dynamic) -->
+<div class="container mb-5">
+  <h3 class="text-center mb-4">Global Brands</h3>
+  <div class="row justify-content-center g-4">
+    {% for brand in brands %}
+    <div class="col-md-3 col-sm-6">
+      <a href="{% url 'brand_products' brand.id %}" class="text-decoration-none text-dark">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden brand-card h-100">
+          <img src="{{ brand.image.url }}" class="w-100" style="height: 200px; object-fit: cover;" alt="{{ brand.name }}">
+          <div class="card-body text-center">
+            <h5 class="card-title mb-1">{{ brand.name }}</h5>
+            <p class="text-muted small">Explore {{ brand.name }} shoes</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% empty %}
+      <p class="text-center">No brands available right now.</p>
+    {% endfor %}
+  </div>
+</div>
+<!-- 🔥 Trending Right Now -->
+<div class="container mb-5">
+  <h3 class="text-center mb-4">Trending Right Now</h3>
+  <div class="row">
+    {% for product in trending_products %}
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm">
+        {% if product.product_images.first %}
+          <img src="{{ product.product_images.first.image.url }}" 
+               class="card-img-top" 
+               style="height: 250px; object-fit: cover;" 
+               alt="{{ product.product_name }}">
+        {% else %}
+          <img src="{% static 'images/no-image.png' %}" 
+               class="card-img-top" 
+               style="height: 250px; object-fit: cover;" 
+               alt="No image available">
+        {% endif %}
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ product.product_name }}</h5>
+          <p class="card-text">Rs. {{ product.price }}.00</p>
+          <a href="{% url 'get_product' product.slug %}" class="btn btn-outline-danger mt-auto">View Product</a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-center">No trending products available.</p>
+    {% endfor %}
+  </div>
+</div>
+
+
+ <!-- 🧒 Kids Collection Slider -->
+<div id="kidsSlider" class="carousel slide carousel-dark mb-5" data-bs-ride="carousel">
+  <!-- Indicators -->
+  <div class="carousel-indicators">
+    <button type="button" data-bs-target="#kidsSlider" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+    <button type="button" data-bs-target="#kidsSlider" data-bs-slide-to="1" aria-label="Slide 2"></button>
+    <button type="button" data-bs-target="#kidsSlider" data-bs-slide-to="2" aria-label="Slide 3"></button>
+    <button type="button" data-bs-target="#kidsSlider" data-bs-slide-to="3" aria-label="Slide 4"></button>
+  </div>
+
+  <!-- Slides -->
+  <div class="carousel-inner rounded shadow overflow-hidden" style="max-height: 450px;">
+    <div class="carousel-item active">
+      <img src="{% static 'images/kid1.png' %}" class="d-block w-100 object-fit-cover" alt="Kids 1">
+    </div>
+    <div class="carousel-item">
+      <img src="{% static 'images/kid2.png' %}" class="d-block w-100 object-fit-cover" alt="Kids 2">
+    </div>
+    <div class="carousel-item">
+      <img src="{% static 'images/kid3.png' %}" class="d-block w-100 object-fit-cover" alt="Kids 3">
+    </div>
+    <div class="carousel-item">
+      <img src="{% static 'images/kid4.png' %}" class="d-block w-100 object-fit-cover" alt="Kids 4">
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <button class="carousel-control-prev" type="button" data-bs-target="#kidsSlider" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#kidsSlider" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+  </button>
+</div>
+
+<!-- 🏷️ Top Value Finds Section -->
+<div class="container my-5">
+  <h4 class="fw-bold mb-4">Top Value Finds</h4>
+  <div class="row text-center g-3">
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="border rounded p-2 bg-light h-100 shadow-sm">
+        <img src="{% static 'images/casual.jpg' %}" class="img-fluid mb-2" alt="Casual Shoes">
+        <p class="mb-0">Casual Shoes</p>
+        <small class="text-muted">Under Rs.799</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="border rounded p-2 bg-light h-100 shadow-sm">
+        <img src="{% static 'images/sport.jpg' %}" class="img-fluid mb-2" alt="Sports Shoes">
+        <p class="mb-0">Sports Shoes</p>
+        <small class="text-muted">Under Rs.699</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="border rounded p-2 bg-light h-100 shadow-sm">
+        <img src="{% static 'images/formal.jpg' %}" class="img-fluid mb-2" alt="Formal Shoes">
+        <p class="mb-0">Formal Shoes</p>
+        <small class="text-muted">Under Rs.599</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="border rounded p-2 bg-light h-100 shadow-sm">
+        <img src="{% static 'images/sandal.jpg' %}" class="img-fluid mb-2" alt="Sandals">
+        <p class="mb-0">Sandals</p>
+        <small class="text-muted">Under Rs.499</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="border rounded p-2 bg-light h-100 shadow-sm">
+        <img src="{% static 'images/flipflop.jpg' %}" class="img-fluid mb-2" alt="Flip-Flops">
+        <p class="mb-0">Flip-Flops</p>
+        <small class="text-muted">Under Rs.399</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="border rounded p-2 bg-light h-100 shadow-sm">
+        <img src="{% static 'images/crocs.jpg' %}" class="img-fluid mb-2" alt="Flip-Flops">
+        <p class="mb-0">crocs</p>
+        <small class="text-muted">Under Rs.399</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DISCOVER OUR STORES Section -->
+<div class="container-fluid bg-light py-4 position-relative">
+  <div class="container">
+    <div class="d-flex align-items-center mb-3">
+      <h4 class="fw-bold me-auto">DISCOVER OUR STORES</h4>
+    </div>
+
+    <!-- Arrows -->
+    <button class="btn btn-light shadow-sm position-absolute top-50 start-0 translate-middle-y" onclick="scrollStoreSlider(-300)" style="z-index:1;">
+      &#10094;
+    </button>
+    <button class="btn btn-light shadow-sm position-absolute top-50 end-0 translate-middle-y" onclick="scrollStoreSlider(300)" style="z-index:1;">
+      &#10095;
+    </button>
+
+    <!-- Slider Wrapper -->
+    <div id="store-slider" class="d-flex overflow-auto gap-3 px-2" style="scroll-behavior: smooth;">
+      <!-- Store Card -->
+      <div class="text-center" style="min-width: 150px;">
+        <img src="{% static 'images/store1.png' %}" class="img-fluid rounded shadow" alt="Marathon Store">
+        <p class="mt-2 fw-semibold">MARATHON STORE</p>
+      </div>
+      <div class="text-center" style="min-width: 150px;">
+        <img src="{% static 'images/store2.png' %}" class="img-fluid rounded shadow" alt="Sports Shoes">
+        <p class="mt-2 fw-semibold">SPORTS SHOES</p>
+      </div>
+      <div class="text-center" style="min-width: 150px;">
+        <img src="{% static 'images/store3.png' %}" class="img-fluid rounded shadow" alt="Kids Shoes">
+        <p class="mt-2 fw-semibold">KIDS' SHOES</p>
+      </div>
+      <div class="text-center" style="min-width: 150px;">
+        <img src="{% static 'images/store4.png' %}" class="img-fluid rounded shadow" alt="Breakout">
+        <p class="mt-2 fw-semibold">BREAKOUT BRANDS</p>
+      </div>
+      <div class="text-center" style="min-width: 150px;">
+        <img src="{% static 'images/store5.png' %}" class="img-fluid rounded shadow" alt="Sneaker World">
+        <p class="mt-2 fw-semibold">SNEAKER WORLD</p>
+      </div>
+      <div class="text-center" style="min-width: 150px;">
+        <img src="{% static 'images/store6.png' %}" class="img-fluid rounded shadow" alt="Women's Shoes">
+        <p class="mt-2 fw-semibold">WOMEN'S SHOES</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function scrollStoreSlider(amount) {
+    document.getElementById('store-slider').scrollBy({
+      left: amount,
+      behavior: 'smooth'
+    });
+  }
+</script>
+
+
+<!-- 👟 Featured Products -->
+<div class="container mt-4">
+  <h3 class="text-center mb-4">Featured Products</h3>
+  <div class="row">
+    {% for product in products %}
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm">
+        {% if product.product_images.first %}
+          <img src="{{ product.product_images.first.image.url }}" class="card-img-top" style="height: 250px; object-fit: cover;" alt="{{ product.product_name }}">
+        {% else %}
+          <img src="{% static 'images/no-image.png' %}" class="card-img-top" style="height: 250px; object-fit: cover;" alt="No image available">
+        {% endif %}
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ product.product_name }}</h5>
+          <p class="card-text">Rs.{{ product.price }}.00</p>
+          <a href="{% url 'get_product' product.slug %}" class="btn btn-primary mt-auto">View Product</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- 🧼 Optional Hover CSS -->
+<style>
+  .brand-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .brand-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  }
+</style>
+
+{% endblock %}
