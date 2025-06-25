@@ -53,11 +53,21 @@ class Product(BaseModel):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name="products")  # Added
     price = models.IntegerField()
+    discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     product_desription = models.TextField()
     color_variant = models.ManyToManyField(ColorVariant, blank=True)
     size_variant = models.ManyToManyField(SizeVariant, blank=True)
     newest_product = models.BooleanField(default=False)
     is_trending = models.BooleanField(default=False)
+    # New fields
+    is_men = models.BooleanField(default=False)
+    is_women = models.BooleanField(default=False)
+
+    @property
+    def discount_percent(self):
+        if self.price and self.discounted_price:
+            return round(100 * (self.price - self.discounted_price) / self.price)
+        return 0
 
     def save(self, *args, **kwargs):
         if not self.slug:

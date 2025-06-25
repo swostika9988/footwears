@@ -426,4 +426,41 @@
   });
 </script>
 
+<script>
+function buildSearchURL(baseUrl, filters) {
+    const params = new URLSearchParams();
+
+    for (const key in filters) {
+        const value = filters[key];
+        if (Array.isArray(value)) {
+            value.forEach(v => params.append(key, v));
+        } else if (value !== undefined && value !== null && value !== '') {
+            params.append(key, value);
+        }
+    }
+
+    return `${baseUrl}?${params.toString()}`;
+}
+
+// Example usage
+const filters = {
+    is_trending: true,
+    newest_product: false,
+    brand: ['1', '2'],
+    category: '3',
+    price_gte: 1000,
+    price_lte: 5000,
+    discount_gte: 40,
+    product_description: 'cotton',
+    is_men: true,
+    created_after: '2024-01-01T00:00:00Z',
+    created_before: '2025-01-01T00:00:00Z'
+};
+
+<!--const searchUrl = buildSearchURL("/products/search/", filters);-->
+<!--console.log("Search URL:", searchUrl);-->
+<!--window.location.href = searchUrl;-->
+</script>
+
+
 {% endblock %}

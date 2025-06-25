@@ -186,12 +186,12 @@ def cart(request):
                 request, 'Total amount in cart is less than the minimum required amount (1.00 INR). Please add a product to the cart.')
             return redirect('index')
 
-        client = razorpay.Client(
-            auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_SECRET_KEY))
-        payment = client.order.create(
-            {'amount': cart_total_in_paise, 'currency': 'INR', 'payment_capture': 1})
-        cart_obj.razorpay_order_id = payment['id']
-        cart_obj.save()
+        # client = razorpay.Client(
+        #     auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_SECRET_KEY))
+        # payment = client.order.create(
+        #     {'amount': cart_total_in_paise, 'currency': 'INR', 'payment_capture': 1})
+        # cart_obj.razorpay_order_id = payment['id']
+        # cart_obj.save()
 
     context = {'cart': cart_obj, 'payment': payment, 'quantity_range': range(1, 6), }
     return render(request, 'accounts/cart.html', context)

@@ -173,7 +173,7 @@ def index(request):
 
 # 👇 Add your brand_products view here:
 def brand_products(request, brand_id):
-    brand = get_object_or_404(Brand, id=brand_id)
+    brand = get_object_or_404(Brand, uid=brand_id)
     products = Product.objects.filter(brand=brand)
     return render(request, 'product/brand_products.html', {
         'brand': brand,
