@@ -2,6 +2,55 @@
 {% load static %}
 {% block start %}
 
+
+
+<!-- 👟 Category Horizontal Slider (4 items per view) -->
+<div class="position-relative bg-white border-top border-bottom py-4">
+  <!-- Left Arrow -->
+  <button class="btn btn-light shadow position-absolute top-50 start-0 translate-middle-y z-1" onclick="scrollCategory(-1)">
+    &#10094;
+  </button>
+
+  <!-- Scrollable Wrapper -->
+  <div class="overflow-hidden px-5">
+    <div id="categorySliderInner" class="d-flex transition" style="width: max-content; gap: 2rem;">
+      <!-- Category Items (repeat these) -->
+      <div class="text-center" style="min-width: 180px;">
+        <img src="{% static 'images/category/men.png' %}" width="100" class="mb-2" alt="Men's Footwear">
+        <div class="fw-semibold">Men's footwear</div>
+      </div>
+      <div class="text-center" style="min-width: 180px;">
+        <img src="{% static 'images/category/women.png' %}" width="100" class="mb-2" alt="Women's Footwear">
+        <div class="fw-semibold">Women's footwear</div>
+      </div>
+      <div class="text-center" style="min-width: 180px;">
+        <img src="{% static 'images/category/kids.png' %}" width="100" class="mb-2" alt="Kids Footwear">
+        <div class="fw-semibold">Kids footwear</div>
+      </div>
+      <div class="text-center" style="min-width: 180px;">
+        <img src="{% static 'images/category/sport.png' %}" width="100" class="mb-2" alt="Sports Shoes">
+        <div class="fw-semibold">Sports shoes</div>
+      </div>
+      <!-- Extra Items (only visible on scroll) -->
+      <div class="text-center" style="min-width: 180px;">
+        <img src="{% static 'images/category/shoe.png' %}" width="100" class="mb-2" alt="Accessories">
+        <div class="fw-semibold">Shoe accessories</div>
+      </div>
+      <div class="text-center" style="min-width: 180px;">
+        <img src="{% static 'images/category/preminum.png' %}" width="100" class="mb-2" alt="Premium">
+        <div class="fw-semibold">Premium footwear</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Arrow -->
+  <button class="btn btn-light shadow position-absolute top-50 end-0 translate-middle-y z-1" onclick="scrollCategory(1)">
+    &#10095;
+  </button>
+</div>
+
+
+
 <!-- 🟦 Carousel -->
 <div id="shoeCarousel" class="carousel slide carousel-fade mb-5" data-bs-ride="carousel" data-bs-interval="3000">
   <div class="carousel-inner rounded shadow overflow-hidden" style="max-height: 500px;">
