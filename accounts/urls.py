@@ -39,7 +39,8 @@ urlpatterns = [
 
     # Success url after payment is done.
     path('success/', success, name="success"),
-
+    path('khalti_success/',khalti_success,name='khalti_success'),
+    path('failure/', failure, name="failure"),
     # Order history and details urls
     path('order-history/', order_history, name='order_history'),
     path('order-details/<str:order_id>/', order_details, name='order_details'),

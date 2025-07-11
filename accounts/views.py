@@ -1,7 +1,7 @@
 import os
 import json
 import uuid
-import razorpay
+import requests
 from weasyprint import CSS, HTML
 from products.models import *
 from django.urls import reverse
@@ -24,9 +24,153 @@ from accounts.forms import UserUpdateForm, UserProfileForm, ShippingAddressForm,
 from products.models import Product, Category
 from products.forms import ProductForm
 from django.contrib.auth import logout
+from django.conf import settings
+import hmac, hashlib, base64
+from datetime import datetime
+from django.utils.crypto import get_random_string
+import time
+
+class KhaltiPayment:
+    def __init__(self):
+        self.KHALTI_SECRET_KEY = settings.KHALTI_SECRET_KEY
+        self.WEBSITE_URL = 'http://127.0.0.1:8000'  # e.g., https://yourdomain.com
+        self.SUCCESS_URL = self.WEBSITE_URL + reverse('khalti_success')
+        self.FAILURE_URL = self.WEBSITE_URL + reverse('failure')
+        self.INITIATE_URL = "https://dev.khalti.com/api/v2/epayment/initiate/"
+        self.LOOKUP_URL = "https://dev.khalti.com/api/v2/epayment/lookup/"
+        self.REDIRECT_URL = None  # Will be filled after initiate
+
+    def _generate_signature(self, user_id, amount, tax_amount):
+        """Encode user/order info safely"""
+        payload = {
+            'user_id': user_id,
+            'amount': amount,
+            'tax_amount': tax_amount,
+            'rand': get_random_string(8)  # Add randomness for safety
+        }
+        json_str = json.dumps(payload)
+        encoded = base64.urlsafe_b64encode(json_str.encode()).decode()
+        return encoded
+
+    def _decode_signature(self, signature):
+        """Decode the unique signature back to original data"""
+        try:
+            decoded_bytes = base64.urlsafe_b64decode(signature.encode())
+            decoded_str = decoded_bytes.decode()
+            payload = json.loads(decoded_str)
+            return payload
+        except Exception:
+            return None
+
+    def initiate_payment(self, user_id, amount=90, tax_amount=10):
+        """Initiate Khalti Payment and return frontend-friendly data"""
+        purchase_order_id = self._generate_signature(user_id, amount, tax_amount)
+        purchase_order_name = "Order for User {}".format(user_id)
+
+        payload = {
+            "return_url": self.SUCCESS_URL,
+            "website_url": self.WEBSITE_URL,
+            "amount": int(amount * 100),  # Convert to paisa
+            "purchase_order_id": purchase_order_id,
+            "purchase_order_name": purchase_order_name,
+        }
+
+        headers = {
+            "Authorization": f"Key {self.KHALTI_SECRET_KEY}"
+        }
+        print(f'payload for khalti initative payment : {payload}')
+        response = requests.post(self.INITIATE_URL, data=payload, headers=headers)
+        resp_data = response.json()
+        print(f'response of payment start : {resp_data}')
+        if response.status_code == 200 and resp_data.get("payment_url"):
+            self.REDIRECT_URL = resp_data["payment_url"]
+            return {
+                'url': self.REDIRECT_URL,
+                'button_text': 'Pay with Khalti',
+                'signature': purchase_order_id,
+                'success_url': self.SUCCESS_URL,
+                'failure_url': self.FAILURE_URL,
+                'fields': {}  # Add if you need custom POST fields
+            }
+        else:
+            return {
+                'error': resp_data.get('detail', 'Payment initiation failed.'),
+                'success_url': self.SUCCESS_URL,
+                'failure_url': self.FAILURE_URL
+            }
+
+    def verify_payment(self, pidx):
+        """Verify the payment status"""
+        headers = {
+            "Authorization": f"Key {self.KHALTI_SECRET_KEY}"
+        }
+        payload = {
+            "pidx": pidx
+        }
+        response = requests.post(self.LOOKUP_URL, data=payload, headers=headers)
+        resp_data = response.json()
+        return resp_data
 
 
+class EsewaPayment:
+    def __init__(self):
+        self.PRODUCT_CODE = "EPAYTEST"
+        self.SUCCESS_URL = "http://127.0.0.1:8000/accounts/success"
+        self.FAILURE_URL = "http://127.0.0.1:8000/accounts/failure"
+        self.SIGNED_FIELDS = "total_amount,transaction_uuid,product_code"
+        self.REDIRECT_URL = 'https://rc-epay.esewa.com.np/api/epay/main/v2/form'
+        self.SECRET_KEY = b"8gBm/:&EnhH.1/q"
+        # replace with your actual eSewa key
 
+    @classmethod
+    def decode_transaction_uuid(self,transaction_uuid: str) -> int:
+        """
+        Extracts the user_id from transaction_uuid of format 'user_id-timestamp'.
+        """
+        try:
+            user_id_str = transaction_uuid.split("-")[0]
+            return int(user_id_str)
+        except (IndexError, ValueError):
+            return None
+
+    def generate_signature(self,total_amount, transaction_uuid, product_code, secret_key):
+        message = f"total_amount={total_amount},transaction_uuid={transaction_uuid},product_code={product_code}"
+        signature = hmac.new(
+            secret_key.encode(), message.encode(), hashlib.sha256
+        ).digest()
+        return base64.b64encode(signature).decode()
+
+    def get_form(self, user_id, amount=90,tax_amount=10):
+        # Derived values
+        total_amount = round(amount + tax_amount, 2)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        transaction_uuid = f"{user_id}-{timestamp}"
+        signature = self.generate_signature(
+            total_amount=total_amount,
+            transaction_uuid=transaction_uuid,
+            product_code=self.PRODUCT_CODE,
+            secret_key=self.SECRET_KEY.decode()
+        )
+        return {
+            'url': self.REDIRECT_URL,
+            'button_text': 'Pay with eSewa',
+            'signature': signature,
+            'success_url': self.SUCCESS_URL,
+            'failure_url': self.FAILURE_URL,
+            'fields': {
+                "amount": str(amount),
+                "tax_amount": str(tax_amount),
+                "total_amount": str(total_amount),
+                "transaction_uuid": transaction_uuid,
+                "product_code": self.PRODUCT_CODE,
+                "product_service_charge": "0",
+                "product_delivery_charge": "0",
+                "success_url": self.SUCCESS_URL,
+                "failure_url": self.FAILURE_URL,
+                "signed_field_names": self.SIGNED_FIELDS,
+                "signature": signature
+            }
+        }
 
 
 # Create your views here.
@@ -185,16 +329,71 @@ def cart(request):
             messages.warning(
                 request, 'Total amount in cart is less than the minimum required amount (1.00 INR). Please add a product to the cart.')
             return redirect('index')
+    # lets create payments forms
+    esewa_formddata = {}
+    khalti_formdata = {}
+    try:
+        esewa = EsewaPayment()
+        esewa_formddata=  esewa.get_form(
+            user_id=user.id,
+        )
+        khalti = KhaltiPayment()
+        khalti_formdata = khalti.initiate_payment(
+            user_id=user.id
+        )
 
-        # client = razorpay.Client(
-        #     auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_SECRET_KEY))
-        # payment = client.order.create(
-        #     {'amount': cart_total_in_paise, 'currency': 'INR', 'payment_capture': 1})
-        # cart_obj.razorpay_order_id = payment['id']
-        # cart_obj.save()
+    except Exception as e:
+        pass
 
-    context = {'cart': cart_obj, 'payment': payment, 'quantity_range': range(1, 6), }
+    context = {
+        'cart': cart_obj,
+        'payment': payment,
+        'quantity_range': range(1, 6),
+        'payment_method': [esewa_formddata],
+        'khalti_formdata': khalti_formdata,
+
+    }
     return render(request, 'accounts/cart.html', context)
+
+def generate_uid():
+    timestamp = int(time.time() * 1000)
+    unique_part = uuid.uuid4().hex[:6]  # 6 hex digits from UUID
+    return f"{timestamp}{unique_part}"
+
+
+def khalti_success(request):
+    pidx = request.GET.get('pidx')
+    signature = request.GET.get('purchase_order_id')  # You sent this during initiation
+
+    payment = KhaltiPayment()
+    decoded_data = payment._decode_signature(signature)
+
+    if not decoded_data:
+        return redirect('cart')
+    payment_info = payment.verify_payment(pidx)
+
+    if payment_info.get("status") == "Completed":
+        # Save payment to DB using decoded_data['user_id'], decoded_data['amount'], etc.
+        user_id = decoded_data.get('user_id',None)
+        if user_id:
+            cart = Cart.objects.filter(user=user_id) #get_object_or_404(Cart, user=user_id)
+            if cart:
+                cart = cart.last()
+                # Mark the cart as paid
+                cart.is_paid = True
+                cart.razorpay_order_id = generate_uid()
+                cart.save()
+                # Create the order after payment is confirmed
+                order = create_order(cart)
+                order_id = order.order_id
+                context = {'order_id': order_id, 'order': order}
+                return render(request, 'payment_success/payment_success.html', context)
+            else:
+                return redirect('cart')
+        else:
+            return redirect('cart')
+    else:
+        return redirect('cart')
 
 
 @require_POST
@@ -235,11 +434,15 @@ def remove_coupon(request, cart_id):
     messages.success(request, 'Coupon Removed.')
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+def failure(request):
+    return redirect('cart')
 
 # Payment success view
 def success(request):
-    order_id = request.GET.get('order_id')
-    cart = get_object_or_404(Cart, razorpay_order_id=order_id)
+    data = json.loads(base64.b64decode(request.body))
+    transaction_uuid = data["transaction_uuid"]
+    user_id = EsewaPayment.decode_transaction_uuid(transaction_uuid)
+    cart = get_object_or_404(Cart, user=user_id)
 
     # Mark the cart as paid
     cart.is_paid = True
@@ -247,7 +450,7 @@ def success(request):
 
     # Create the order after payment is confirmed
     order = create_order(cart)
-
+    order_id = order.order_id
     context = {'order_id': order_id, 'order': order}
     return render(request, 'payment_success/payment_success.html', context)
 
@@ -361,13 +564,13 @@ def order_history(request):
 
 
 # Create an order view
-def create_order(cart):
+def create_order(cart,payment_mode='khalti'):
     order, created = Order.objects.get_or_create(
         user=cart.user,
         order_id=cart.razorpay_order_id,
         payment_status="Paid",
         shipping_address=cart.user.profile.shipping_address,
-        payment_mode="Razorpay",
+        payment_mode=payment_mode,
         order_total_price=cart.get_cart_total(),
         coupon=cart.coupon,
         grand_total=cart.get_cart_total_price_after_coupon(),

@@ -1,6 +1,28 @@
 {% extends "base/base.html" %}
 {% block title %}Shopping Cart{% endblock %}
 {% block start %} {% load static %}
+ <style>
+    .modal-header {
+      background-color: #007bff;
+      color: white;
+    }
+    .payment-option {
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 20px;
+      transition: 0.3s ease;
+    }
+    .payment-option:hover {
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+      transform: scale(1.02);
+    }
+    .warning-text {
+      color: red;
+      font-weight: bold;
+      margin-top: 15px;
+      text-align: center;
+    }
+  </style>
 
 <section class="section-content padding-y">
   <div class="container">
@@ -176,70 +198,71 @@
   <!-- container .//  -->
 </section>
 
+
+ <!-- Modal -->
+  <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="paymentModalLabel">Complete Your Payment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <h4 class="mb-3">Total Amount: <strong>₹ 2,499.00</strong></h4>
+
+          <p class="warning-text">⚠️ Please do not close this window until the payment is completed.</p>
+
+          <div class="row mt-4 gy-3">
+            <!-- Payment Option 1 -->
+            {% for payment in payment_method %}
+              <div class="col-md-6">
+                <form action="{{ payment.url }}" method="POST" class="payment-option" target="_blank">
+                  {% for key, val in payment.fields.items %}
+                    <input type="hidden" name="{{ key }}" value="{{ val }}">
+                  {% endfor %}
+                  <button type="submit" class="btn btn-outline-success w-100">
+                    {{ payment.button_text }} <i class="fas fa-university ms-2"></i>
+                  </button>
+                </form>
+              </div>
+            {% endfor %}
+
+            <!-- Payment Option 2 -->
+            <div class="col-md-6">
+              <a href="{{khalti_formdata.url}}" class="payment-option">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                  Pay with Khalti <i class="fas fa-wallet ms-2"></i>
+                </button>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
-  var options = {
-    key: "rzp_test_5XxorWz3z1N2m5",
-    amount: "{{ cart.get_cart_total_price_after_coupon|floatformat:0 }}",
-    currency: "INR",
-    name: "Django Ecommerce Site",
-    description: "Purchased",
-    order_id: "{{ payment.id }}",
+  document.addEventListener("DOMContentLoaded", function () {
+    const openBtn = document.getElementById('rzp-button1');
+    const modalEl = document.getElementById('paymentModal');
 
-    handler: function (response) {
-      console.log("Success");
-      window.location.href = `http://127.0.0.1:8000/accounts/success/?order_id={{ payment.id }}`;
-    },
-    prefill: {
-      name: "Gaurav Kumar",
-      email: "gaurav.kumar@example.com",
-      contact: "9000090000",
-    },
-    notes: {
-      address: "Razorpay Corporate Office",
-    },
-    theme: {
-      color: "#3399cc",
-    },
-  };
-  var rzp1 = new Razorpay(options);
-  rzp1.on("payment.failed", function (response) {
-    alert(response.error.code);
-    alert(response.error.description);
-    alert(response.error.source);
-    alert(response.error.step);
-    alert(response.error.reason);
-    alert(response.error.metadata.order_id);
-    alert(response.error.metadata.payment_id);
-  });
-  document.getElementById("rzp-button1").onclick = function (e) {
-    rzp1.open();
-    e.preventDefault();
-  };
+    // Create a Bootstrap modal instance
+    const paymentModal = new bootstrap.Modal(modalEl);
 
-  function updateCartItem(selectElement, cartItemId) {
-    const quantity = selectElement.value;
-
-    fetch("{% url 'update_cart_item' %}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
-        },
-        body: JSON.stringify({
-            "cart_item_id": cartItemId,
-            "quantity": quantity
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            alert("Error updating cart");
-        }
+    // Open modal when button is clicked
+    openBtn.addEventListener('click', () => {
+      paymentModal.show();
     });
-}
+
+    // Optional: Add event listener for close button if you want extra control
+    const closeBtn = modalEl.querySelector('.btn-close');
+    closeBtn.addEventListener('click', () => {
+      paymentModal.hide();
+    });
+  });
 </script>
 {% endblock %}
