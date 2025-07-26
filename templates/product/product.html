@@ -52,6 +52,38 @@
       font-size: 0.9rem;
     }
   }
+
+  /* Sentiment Analysis Styles */
+  .sentiment-analysis-section {
+    border-left: 4px solid #007bff;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  }
+
+  .aspect-analysis .progress {
+    background-color: #e9ecef;
+  }
+
+  .review-sentiment {
+    border-top: 1px solid #dee2e6;
+    padding-top: 10px;
+  }
+
+  .sentiment-trend .badge {
+    font-size: 0.8rem;
+  }
+
+  /* AI Recommendation Styles */
+  .related-products-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+  }
+
+  .related-products-section h3 {
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+  }
 </style>
 
 <section class="section-content padding-y">
@@ -117,6 +149,97 @@
                 <i class="fa fa-clipboard-check"></i> 154 orders
               </small>
             </div>
+
+            <!-- 🌟 Sentiment Analysis Section -->
+            {% if sentiment_insights %}
+            <div class="sentiment-analysis-section mb-4 p-3 bg-light rounded">
+              <h6 class="mb-3">
+                <i class="fas fa-chart-line text-primary"></i> 
+                Customer Sentiment Analysis
+                <span class="badge bg-primary ms-2">AI Powered</span>
+              </h6>
+              
+              <!-- Overall Sentiment -->
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center">
+                    <span class="me-2">Overall Sentiment:</span>
+                    {% if sentiment_insights.overall_sentiment == 'positive' %}
+                      <span class="badge bg-success">Positive</span>
+                    {% elif sentiment_insights.overall_sentiment == 'negative' %}
+                      <span class="badge bg-danger">Negative</span>
+                    {% else %}
+                      <span class="badge bg-secondary">Neutral</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center">
+                    <span class="me-2">Sentiment Score:</span>
+                    <div class="progress" style="width: 60%; height: 8px;">
+                      <div class="progress-bar {% if sentiment_insights.sentiment_score > 0 %}bg-success{% elif sentiment_insights.sentiment_score < 0 %}bg-danger{% else %}bg-secondary{% endif %}" 
+                           style="width: {% widthratio sentiment_insights.sentiment_score|add:1 2 100 %}%"></div>
+                    </div>
+                    <small class="ms-2">{{ sentiment_insights.sentiment_score|floatformat:2 }}</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Review Statistics -->
+              <div class="row mb-3">
+                <div class="col-12">
+                  <h6 class="mb-2">Review Breakdown:</h6>
+                  <div class="d-flex justify-content-between">
+                    <span class="badge bg-success">{{ sentiment_insights.review_stats.positive }} Positive</span>
+                    <span class="badge bg-warning">{{ sentiment_insights.review_stats.neutral }} Neutral</span>
+                    <span class="badge bg-danger">{{ sentiment_insights.review_stats.negative }} Negative</span>
+                    <span class="badge bg-info">{{ sentiment_insights.review_stats.total }} Total</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Aspect Analysis -->
+              {% if sentiment_insights.aspects %}
+              <div class="aspect-analysis">
+                <h6 class="mb-2">What Customers Say About:</h6>
+                <div class="row">
+                  {% for aspect, data in sentiment_insights.aspects.items %}
+                  {% if data.total_mentions > 0 %}
+                  <div class="col-md-6 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="text-capitalize">{{ aspect }}:</span>
+                      <div class="progress" style="width: 50%; height: 6px;">
+                        <div class="progress-bar {% if data.sentiment_score > 0 %}bg-success{% elif data.sentiment_score < 0 %}bg-danger{% else %}bg-secondary{% endif %}" 
+                             style="width: {% widthratio data.sentiment_score|add:1 2 100 %}%"></div>
+                      </div>
+                      <small class="ms-2">{{ data.sentiment_score|floatformat:2 }}</small>
+                    </div>
+                  </div>
+                  {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Sentiment Trend -->
+              {% if sentiment_insights.trend.direction != 'unknown' %}
+              <div class="sentiment-trend mt-3">
+                <h6 class="mb-2">Sentiment Trend:</h6>
+                <div class="d-flex align-items-center">
+                  <span class="me-2">Direction:</span>
+                  {% if sentiment_insights.trend.direction == 'improving' %}
+                    <span class="badge bg-success"><i class="fas fa-arrow-up"></i> Improving</span>
+                  {% elif sentiment_insights.trend.direction == 'declining' %}
+                    <span class="badge bg-danger"><i class="fas fa-arrow-down"></i> Declining</span>
+                  {% else %}
+                    <span class="badge bg-secondary"><i class="fas fa-minus"></i> Stable</span>
+                  {% endif %}
+                  <span class="ms-3">Strength: {{ sentiment_insights.trend.strength|floatformat:2 }}</span>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
             <!-- rating-wrap.// -->
 
             <div class="mb-3">
@@ -218,16 +341,50 @@
       </div>
     </div>
 
-    <!-- Related Products Section -->
-    <h3 class="title padding-y-sm">Related products</h3>
-    {% if related_products%} 
-      {% with related_products as list_products %} 
-        {% include 'product_parts/product_list.html' %} 
-      {% endwith %}
-    {% else %}
-    <p>No related products found.</p>
-    {% endif %}
-    <!-- Related Products Section End -->
+    <!-- 🎯 AI-Powered Related Products Section -->
+    <div class="related-products-section">
+      <h3 class="title padding-y-sm">
+        <i class="fas fa-robot text-primary"></i> 
+        AI-Powered Recommendations
+        <span class="badge bg-primary ms-2">Smart Matching</span>
+      </h3>
+      
+      <!-- Content-Based Recommendations -->
+      {% if related_products %}
+      <div class="mb-4">
+        <h5 class="text-muted mb-3">
+          <i class="fas fa-tags text-info"></i> 
+          Similar Products (Content-Based)
+          <small class="text-muted">Based on product features & attributes</small>
+        </h5>
+        {% with related_products as list_products %} 
+          {% include 'product_parts/product_list.html' %} 
+        {% endwith %}
+      </div>
+      {% endif %}
+
+      <!-- Collaborative Filtering Recommendations -->
+      {% if ai_similar_products %}
+      <div class="mb-4">
+        <h5 class="text-muted mb-3">
+          <i class="fas fa-users text-success"></i> 
+          Customers Also Liked (Collaborative Filtering)
+          <small class="text-muted">Based on user behavior patterns</small>
+        </h5>
+        {% with ai_similar_products as list_products %} 
+          {% include 'product_parts/product_list.html' %} 
+        {% endwith %}
+      </div>
+      {% endif %}
+
+      {% if not related_products and not ai_similar_products %}
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> 
+        No AI recommendations available yet. Check back later for personalized suggestions!
+      </div>
+      {% endif %}
+    </div>
+    <!-- AI-Powered Related Products Section End -->
 
     <hr />
 
@@ -245,6 +402,16 @@
               <strong>Rating: </strong>{{ review.stars }}/5<br />
               <strong>Comment: </strong>{{ review.content }}
             </p>
+            
+            <!-- Individual Review Sentiment Analysis -->
+            <div class="review-sentiment mt-2">
+              <div class="d-flex align-items-center">
+                <span class="me-2">Review Sentiment:</span>
+                <div class="review-sentiment-score" data-review-id="{{ review.id }}">
+                  <span class="badge bg-secondary">Analyzing...</span>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="d-flex flex-wrap align-items-center gap-2">
             {% if request.user.is_authenticated %}
@@ -423,7 +590,68 @@
         mainImage.classList.add("zoomed-in");
       }
     });
+
+    // Analyze individual review sentiments
+    analyzeReviewSentiments();
   });
+
+  // Function to analyze review sentiments using TextBlob
+  function analyzeReviewSentiments() {
+    const reviewElements = document.querySelectorAll('.review-sentiment-score');
+    
+    reviewElements.forEach(element => {
+      const reviewId = element.dataset.reviewId;
+      const reviewText = element.closest('.card-body').querySelector('p').textContent;
+      
+      // Extract just the comment part
+      const commentMatch = reviewText.match(/Comment:\s*(.+)/);
+      if (commentMatch) {
+        const comment = commentMatch[1];
+        
+        // Simple sentiment analysis (you can replace this with API call)
+        const sentiment = analyzeTextSentiment(comment);
+        updateSentimentBadge(element, sentiment);
+      }
+    });
+  }
+
+  function analyzeTextSentiment(text) {
+    // Simple keyword-based sentiment analysis
+    const positiveWords = ['good', 'great', 'excellent', 'amazing', 'love', 'perfect', 'comfortable', 'nice', 'wonderful', 'fantastic'];
+    const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'disappointing', 'uncomfortable', 'poor', 'worst', 'horrible', 'useless'];
+    
+    const lowerText = text.toLowerCase();
+    let positiveCount = 0;
+    let negativeCount = 0;
+    
+    positiveWords.forEach(word => {
+      if (lowerText.includes(word)) positiveCount++;
+    });
+    
+    negativeWords.forEach(word => {
+      if (lowerText.includes(word)) negativeCount++;
+    });
+    
+    if (positiveCount > negativeCount) return 'positive';
+    else if (negativeCount > positiveCount) return 'negative';
+    else return 'neutral';
+  }
+
+  function updateSentimentBadge(element, sentiment) {
+    const badge = element.querySelector('.badge');
+    badge.className = 'badge';
+    
+    if (sentiment === 'positive') {
+      badge.classList.add('bg-success');
+      badge.textContent = '😊 Positive';
+    } else if (sentiment === 'negative') {
+      badge.classList.add('bg-danger');
+      badge.textContent = '😞 Negative';
+    } else {
+      badge.classList.add('bg-secondary');
+      badge.textContent = '😐 Neutral';
+    }
+  }
 </script>
 
 <script>

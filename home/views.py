@@ -4,6 +4,8 @@ from products.models import Product, Category, Brand
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.utils.dateparse import parse_datetime
 from django.db.models import Q, F, IntegerField, ExpressionWrapper
+from products.recommendation_engine import RecommendationService
+from products.sentiment_analyzer import SentimentService
 # Create your views here.
 import json
 
@@ -28,6 +30,27 @@ def index(request):
     page = request.GET.get('page', 1)
     paginator = Paginator(query, 20)
     trending_products = query.filter(is_trending=True).order_by('-created_at')[:10]
+    
+    # Get personalized recommendations for authenticated users
+    recommended_products = []
+    top_sentiment_products = []
+    comfort_insights = []
+    
+    if request.user.is_authenticated:
+        recommendation_service = RecommendationService()
+        recommended_products = recommendation_service.get_recommendations_for_user(
+            user=request.user,
+            recommendation_type='hybrid',
+            limit=8
+        )
+    
+    # Get top sentiment products (highly rated by sentiment analysis)
+    sentiment_service = SentimentService()
+    top_sentiment_products = sentiment_service.get_top_sentiment_products('positive', 8)
+    
+    # Get comfort insights for homepage
+    comfort_insights = sentiment_service.get_aspect_insights('comfort', 4)
+    
     # lets take 10 brands
     brands = Brand.objects.all()[:10]
     try:
@@ -45,6 +68,9 @@ def index(request):
         'selected_category': selected_category,
         'selected_sort': selected_sort,
         'trending_products': trending_products,
+        'recommended_products': recommended_products,
+        'top_sentiment_products': top_sentiment_products,
+        'comfort_insights': comfort_insights,
         'brands': brands,
     }
     return render(request, 'home/index.html', context)

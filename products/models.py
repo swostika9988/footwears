@@ -133,3 +133,196 @@ class Wishlist(BaseModel):
 
     def __str__(self):
         return f'{self.user.username} - {self.product.product_name} - {self.size_variant.size_name if self.size_variant else "No Size"}'
+
+
+# ============================================================================
+# RECOMMENDATION SYSTEM MODELS
+# ============================================================================
+
+class UserPreference(BaseModel):
+    """Track user preferences for content-based filtering"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='preferences')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, null=True, blank=True)
+    price_range_min = models.IntegerField(default=0)
+    price_range_max = models.IntegerField(default=10000)
+    weight = models.FloatField(default=1.0)  # Preference strength
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'category', 'brand')
+
+    def __str__(self):
+        return f'{self.user.username} - {self.category.category_name}'
+
+
+class ProductFeature(BaseModel):
+    """Extract and store product features for content-based filtering"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='features')
+    feature_name = models.CharField(max_length=100)  # e.g., "sporty", "casual", "formal"
+    feature_value = models.FloatField(default=0.0)  # Feature strength (0-1)
+    
+    class Meta:
+        unique_together = ('product', 'feature_name')
+
+    def __str__(self):
+        return f'{self.product.product_name} - {self.feature_name}: {self.feature_value}'
+
+
+class UserBehavior(BaseModel):
+    """Track user behavior for collaborative filtering"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='behaviors')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='user_behaviors')
+    behavior_type = models.CharField(max_length=20, choices=[
+        ('view', 'Product View'),
+        ('cart_add', 'Added to Cart'),
+        ('purchase', 'Purchased'),
+        ('wishlist', 'Added to Wishlist'),
+        ('review', 'Reviewed'),
+    ])
+    timestamp = models.DateTimeField(auto_now_add=True)
+    weight = models.FloatField(default=1.0)  # Behavior importance
+
+    class Meta:
+        unique_together = ('user', 'product', 'behavior_type')
+
+    def __str__(self):
+        return f'{self.user.username} - {self.product.product_name} - {self.behavior_type}'
+
+
+class UserSimilarity(BaseModel):
+    """Store user similarity scores for collaborative filtering"""
+    user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='similarities_as_user1')
+    user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='similarities_as_user2')
+    similarity_score = models.FloatField(default=0.0)
+    last_calculated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user1', 'user2')
+
+    def __str__(self):
+        return f'{self.user1.username} ~ {self.user2.username}: {self.similarity_score:.3f}'
+
+
+class ProductSimilarity(BaseModel):
+    """Store product similarity scores for collaborative filtering"""
+    product1 = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='similarities_as_product1')
+    product2 = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='similarities_as_product2')
+    similarity_score = models.FloatField(default=0.0)
+    last_calculated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('product1', 'product2')
+
+    def __str__(self):
+        return f'{self.product1.product_name} ~ {self.product2.product_name}: {self.similarity_score:.3f}'
+
+
+class UserRating(BaseModel):
+    """Calculated user ratings for collaborative filtering"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='calculated_ratings')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='user_ratings')
+    rating = models.FloatField(default=0.0)  # Calculated from reviews, purchases, etc.
+    confidence = models.FloatField(default=0.0)  # How confident we are in this rating
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'product')
+
+    def __str__(self):
+        return f'{self.user.username} -> {self.product.product_name}: {self.rating:.2f}'
+
+
+class ProductHash(BaseModel):
+    """Store product hashes for efficient similarity search"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='hashes')
+    hash_type = models.CharField(max_length=20, choices=[
+        ('content', 'Content Hash'),
+        ('feature', 'Feature Hash'),
+        ('image', 'Image Hash'),
+    ])
+    hash_value = models.CharField(max_length=255)
+    hash_metadata = models.JSONField(default=dict)  # Additional hash info
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('product', 'hash_type')
+
+    def __str__(self):
+        return f'{self.product.product_name} - {self.hash_type}'
+
+
+class HashBucket(BaseModel):
+    """Group similar products using hash buckets for fast retrieval"""
+    bucket_id = models.CharField(max_length=100)
+    hash_type = models.CharField(max_length=20)
+    products = models.ManyToManyField(Product, through='ProductHashBucket')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Bucket {self.bucket_id} ({self.hash_type})'
+
+
+class ProductHashBucket(BaseModel):
+    """Many-to-many relationship between products and hash buckets"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    bucket = models.ForeignKey(HashBucket, on_delete=models.CASCADE)
+    hash_distance = models.FloatField(default=0.0)
+
+    class Meta:
+        unique_together = ('product', 'bucket')
+
+    def __str__(self):
+        return f'{self.product.product_name} in {self.bucket.bucket_id}'
+
+
+class SentimentAnalysis(BaseModel):
+    """Store sentiment analysis results for product reviews"""
+    review = models.OneToOneField(ProductReview, on_delete=models.CASCADE, related_name='sentiment')
+    overall_sentiment = models.CharField(max_length=10, choices=[
+        ('positive', 'Positive'),
+        ('negative', 'Negative'),
+        ('neutral', 'Neutral'),
+    ])
+    sentiment_score = models.FloatField(default=0.0)  # -1 to 1
+    confidence = models.FloatField(default=0.0)
+    processed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.review.product.product_name} - {self.overall_sentiment}'
+
+
+class AspectSentiment(BaseModel):
+    """Store aspect-based sentiment analysis"""
+    review = models.ForeignKey(ProductReview, on_delete=models.CASCADE, related_name='aspect_sentiments')
+    aspect = models.CharField(max_length=50)  # e.g., "comfort", "style", "durability"
+    sentiment = models.CharField(max_length=10, choices=[
+        ('positive', 'Positive'),
+        ('negative', 'Negative'),
+        ('neutral', 'Neutral'),
+    ])
+    sentiment_score = models.FloatField(default=0.0)
+    confidence = models.FloatField(default=0.0)
+
+    class Meta:
+        unique_together = ('review', 'aspect')
+
+    def __str__(self):
+        return f'{self.review.product.product_name} - {self.aspect}: {self.sentiment}'
+
+
+class SentimentTrend(BaseModel):
+    """Track sentiment trends over time"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='sentiment_trends')
+    date = models.DateField()
+    positive_count = models.IntegerField(default=0)
+    negative_count = models.IntegerField(default=0)
+    neutral_count = models.IntegerField(default=0)
+    average_sentiment = models.FloatField(default=0.0)
+    total_reviews = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('product', 'date')
+
+    def __str__(self):
+        return f'{self.product.product_name} - {self.date}: {self.average_sentiment:.2f}'

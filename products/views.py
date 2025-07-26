@@ -6,14 +6,53 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
 from .forms import ReviewForm
-from products.models import Product, SizeVariant, ProductReview, Wishlist, Brand
+from products.models import Product, SizeVariant, ProductReview, Wishlist, Brand, UserBehavior
 from accounts.models import Cart, CartItem
+from .recommendation_engine import RecommendationService
+from .feature_extractor import ProductFeatureExtractor
+from .preference_learner import PreferenceService as UserPreferenceService
+from .sentiment_analyzer import SentimentService
 
 
 def get_product(request, slug):
     product = get_object_or_404(Product, slug=slug)
     sorted_size_variants = product.size_variant.all().order_by('size_name')
-    related_products = list(product.category.products.filter(parent=None).exclude(uid=product.uid))
+    
+    # Record user behavior for recommendation learning
+    if request.user.is_authenticated:
+        # Record product view
+        recommendation_service = RecommendationService()
+        recommendation_service.record_user_behavior(
+            user=request.user,
+            product=product,
+            behavior_type='view',
+            weight=1.0
+        )
+        
+        # Update user preferences
+        preference_service = UserPreferenceService()
+        preference_service.update_user_preferences(request.user)
+    
+    # Get related products using recommendation system
+    recommendation_service = RecommendationService()
+    related_products = recommendation_service.get_recommendations_for_product(product, limit=4)
+    
+    # Fallback to category-based products if no recommendations
+    if not related_products:
+        related_products = list(product.category.products.filter(parent=None).exclude(uid=product.uid))
+        if len(related_products) >= 4:
+            related_products = random.sample(related_products, 4)
+    
+    # Get sentiment analysis for the product
+    sentiment_service = SentimentService()
+    sentiment_insights = sentiment_service.get_sentiment_insights(product)
+    
+    # Get AI-powered similar products (collaborative filtering)
+    ai_similar_products = recommendation_service.engine.get_collaborative_filtering_recommendations(
+        user=request.user if request.user.is_authenticated else None,
+        method='item_based',
+        limit=4
+    )
 
     review = None
     if request.user.is_authenticated:
@@ -30,13 +69,19 @@ def get_product(request, slug):
             review_instance.product = product
             review_instance.user = request.user
             review_instance.save()
+            
+            # Record review behavior
+            recommendation_service.record_user_behavior(
+                user=request.user,
+                product=product,
+                behavior_type='review',
+                weight=2.0
+            )
+            
             messages.success(request, "Review added successfully!")
             return redirect('get_product', slug=slug)
     else:
         review_form = ReviewForm(instance=review) if review else ReviewForm()
-
-    if len(related_products) >= 4:
-        related_products = random.sample(related_products, 4)
 
     in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists() if request.user.is_authenticated else False
 
@@ -44,6 +89,8 @@ def get_product(request, slug):
         'product': product,
         'sorted_size_variants': sorted_size_variants,
         'related_products': related_products,
+        'ai_similar_products': ai_similar_products,
+        'sentiment_insights': sentiment_insights,
         'review_form': review_form,
         'rating_percentage': rating_percentage,
         'in_wishlist': in_wishlist,
