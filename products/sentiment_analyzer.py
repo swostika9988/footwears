@@ -79,38 +79,40 @@ class SentimentAnalyzer:
                 return
             
             # Clear existing analysis
-            SentimentAnalysis.objects.filter(product=product).delete()
-            AspectSentiment.objects.filter(product=product).delete()
+            SentimentAnalysis.objects.filter(review__product=product).delete()
+            AspectSentiment.objects.filter(review__product=product).delete()
             
             # Analyze overall sentiment
             overall_sentiment = self._analyze_overall_sentiment(reviews)
             
-            # Create overall sentiment record
-            SentimentAnalysis.objects.create(
-                product=product,
-                overall_sentiment=overall_sentiment['sentiment'],
-                sentiment_score=overall_sentiment['score'],
-                positive_reviews=overall_sentiment['positive_count'],
-                negative_reviews=overall_sentiment['negative_count'],
-                neutral_reviews=overall_sentiment['neutral_count'],
-                total_reviews=overall_sentiment['total_count'],
-                confidence_score=overall_sentiment['confidence']
-            )
-            
-            # Analyze aspect-based sentiment
-            aspect_sentiments = self._analyze_aspect_sentiments(reviews)
-            
-            # Create aspect sentiment records
-            for aspect, sentiment_data in aspect_sentiments.items():
-                AspectSentiment.objects.create(
-                    product=product,
-                    aspect=aspect,
-                    sentiment_score=sentiment_data['score'],
-                    positive_mentions=sentiment_data['positive_mentions'],
-                    negative_mentions=sentiment_data['negative_mentions'],
-                    total_mentions=sentiment_data['total_mentions'],
-                    confidence_score=sentiment_data['confidence']
+            # Create overall sentiment record for each review
+            for review in reviews:
+                review_sentiment = self._analyze_single_review_sentiment(review)
+                SentimentAnalysis.objects.get_or_create(
+                    review=review,
+                    defaults={
+                        'overall_sentiment': review_sentiment['sentiment'],
+                        'sentiment_score': review_sentiment['score'],
+                        'confidence': review_sentiment['confidence']
+                    }
                 )
+            
+            # Analyze aspect-based sentiment for each review
+            for review in reviews:
+                aspect_sentiments = self._analyze_aspect_sentiments([review])
+                for aspect, sentiment_data in aspect_sentiments.items():
+                    AspectSentiment.objects.get_or_create(
+                        review=review,
+                        aspect=aspect,
+                        defaults={
+                            'sentiment': sentiment_data['sentiment'],
+                            'sentiment_score': sentiment_data['score'],
+                            'confidence': sentiment_data['confidence']
+                        }
+                    )
+            
+            # Update sentiment trends
+            self._update_sentiment_trends(product)
             
             print(f"Sentiment analysis completed for product: {product.product_name}")
             
@@ -133,7 +135,7 @@ class SentimentAnalyzer:
         Check if sentiment analysis is recent (within 7 days)
         """
         recent_analysis = SentimentAnalysis.objects.filter(
-            product=product,
+            review__product=product,
             created_at__gte=timezone.now() - timedelta(days=7)
         ).first()
         
@@ -151,7 +153,7 @@ class SentimentAnalyzer:
         
         for review in reviews:
             # Use TextBlob for sentiment analysis
-            blob = TextBlob(review.review_text)
+            blob = TextBlob(review.content or '')
             sentiment_score = blob.sentiment.polarity
             
             total_score += sentiment_score
@@ -187,6 +189,69 @@ class SentimentAnalyzer:
             'confidence': confidence
         }
     
+    def _analyze_single_review_sentiment(self, review):
+        """
+        Analyze sentiment for a single review
+        """
+        blob = TextBlob(review.content or '')
+        sentiment_score = blob.sentiment.polarity
+        
+        if sentiment_score > 0.1:
+            sentiment = 'positive'
+        elif sentiment_score < -0.1:
+            sentiment = 'negative'
+        else:
+            sentiment = 'neutral'
+        
+        # Calculate confidence based on review length and subjectivity
+        confidence = min(1.0, len(review.content or '') / 100)  # Longer reviews = higher confidence
+        
+        return {
+            'sentiment': sentiment,
+            'score': sentiment_score,
+            'confidence': confidence
+        }
+    
+    def _update_sentiment_trends(self, product):
+        """
+        Update sentiment trends for a product
+        """
+        from datetime import date
+        
+        # Get all reviews for the product
+        reviews = product.reviews.all()
+        
+        # Group by date
+        daily_sentiments = {}
+        for review in reviews:
+            review_date = review.date_added.date()
+            if review_date not in daily_sentiments:
+                daily_sentiments[review_date] = {
+                    'positive': 0, 'negative': 0, 'neutral': 0,
+                    'total_score': 0, 'count': 0
+                }
+            
+            sentiment = self._analyze_single_review_sentiment(review)
+            daily_sentiments[review_date][sentiment['sentiment']] += 1
+            daily_sentiments[review_date]['total_score'] += sentiment['score']
+            daily_sentiments[review_date]['count'] += 1
+        
+        # Create or update trend records
+        for review_date, data in daily_sentiments.items():
+            avg_sentiment = data['total_score'] / data['count'] if data['count'] > 0 else 0
+            
+            SentimentTrend.objects.get_or_create(
+                product=product,
+                date=review_date,
+                defaults={
+                    'positive_count': data['positive'],
+                    'negative_count': data['negative'],
+                    'neutral_count': data['neutral'],
+                    'average_sentiment': avg_sentiment,
+                    'total_reviews': data['count']
+                }
+            )
+    
     def _analyze_aspect_sentiments(self, reviews):
         """
         Analyze sentiment for different aspects
@@ -200,7 +265,7 @@ class SentimentAnalyzer:
         })
         
         for review in reviews:
-            text = review.review_text.lower()
+            text = (review.content or '').lower()
             
             # Analyze each aspect
             for aspect, keywords in self.aspects.items():
@@ -244,6 +309,14 @@ class SentimentAnalyzer:
                 
                 # Calculate confidence based on mention count
                 data['confidence'] = min(1.0, total_mentions / 5)
+                
+                # Determine sentiment category
+                if data['score'] > 0.1:
+                    data['sentiment'] = 'positive'
+                elif data['score'] < -0.1:
+                    data['sentiment'] = 'negative'
+                else:
+                    data['sentiment'] = 'neutral'
         
         return aspect_sentiments
     
@@ -252,34 +325,64 @@ class SentimentAnalyzer:
         Get sentiment summary for a product
         """
         try:
-            sentiment_analysis = SentimentAnalysis.objects.filter(product=product).first()
-            aspect_sentiments = AspectSentiment.objects.filter(product=product)
+            # Get all sentiment analyses for this product's reviews
+            sentiment_analyses = SentimentAnalysis.objects.filter(review__product=product)
+            aspect_sentiments = AspectSentiment.objects.filter(review__product=product)
             
-            if not sentiment_analysis:
+            if not sentiment_analyses.exists():
                 return None
             
+            # Calculate overall stats
+            total_reviews = sentiment_analyses.count()
+            positive_count = sentiment_analyses.filter(overall_sentiment='positive').count()
+            negative_count = sentiment_analyses.filter(overall_sentiment='negative').count()
+            neutral_count = sentiment_analyses.filter(overall_sentiment='neutral').count()
+            avg_score = sentiment_analyses.aggregate(Avg('sentiment_score'))['sentiment_score__avg'] or 0
+            
+            # Determine overall sentiment
+            if positive_count > negative_count and positive_count > neutral_count:
+                overall_sentiment = 'positive'
+            elif negative_count > positive_count and negative_count > neutral_count:
+                overall_sentiment = 'negative'
+            else:
+                overall_sentiment = 'neutral'
+            
             summary = {
-                'overall_sentiment': sentiment_analysis.overall_sentiment,
-                'sentiment_score': sentiment_analysis.sentiment_score,
-                'confidence_score': sentiment_analysis.confidence_score,
+                'overall_sentiment': overall_sentiment,
+                'sentiment_score': avg_score,
+                'confidence_score': min(1.0, total_reviews / 10),
                 'review_stats': {
-                    'total': sentiment_analysis.total_reviews,
-                    'positive': sentiment_analysis.positive_reviews,
-                    'negative': sentiment_analysis.negative_reviews,
-                    'neutral': sentiment_analysis.neutral_reviews
+                    'total': total_reviews,
+                    'positive': positive_count,
+                    'negative': negative_count,
+                    'neutral': neutral_count
                 },
                 'aspects': {}
             }
             
-            # Add aspect sentiments
+            # Group aspect sentiments by aspect
+            aspect_data = {}
             for aspect_sentiment in aspect_sentiments:
-                summary['aspects'][aspect_sentiment.aspect] = {
-                    'sentiment_score': aspect_sentiment.sentiment_score,
-                    'positive_mentions': aspect_sentiment.positive_mentions,
-                    'negative_mentions': aspect_sentiment.negative_mentions,
-                    'total_mentions': aspect_sentiment.total_mentions,
-                    'confidence_score': aspect_sentiment.confidence_score
-                }
+                aspect = aspect_sentiment.aspect
+                if aspect not in aspect_data:
+                    aspect_data[aspect] = {
+                        'sentiment_score': 0,
+                        'confidence': 0,
+                        'count': 0
+                    }
+                
+                aspect_data[aspect]['sentiment_score'] += aspect_sentiment.sentiment_score
+                aspect_data[aspect]['confidence'] += aspect_sentiment.confidence
+                aspect_data[aspect]['count'] += 1
+            
+            # Calculate averages for aspects
+            for aspect, data in aspect_data.items():
+                if data['count'] > 0:
+                    summary['aspects'][aspect] = {
+                        'sentiment_score': data['sentiment_score'] / data['count'],
+                        'confidence': data['confidence'] / data['count'],
+                        'total_mentions': data['count']
+                    }
             
             return summary
             
@@ -312,18 +415,8 @@ class SentimentTrendAnalyzer:
             # Calculate trend
             trend_data = self._calculate_trend(weekly_sentiments)
             
-            # Save trend data
-            SentimentTrend.objects.filter(product=product).delete()
-            
-            SentimentTrend.objects.create(
-                product=product,
-                trend_direction=trend_data['direction'],
-                trend_strength=trend_data['strength'],
-                average_sentiment=trend_data['average_sentiment'],
-                sentiment_volatility=trend_data['volatility'],
-                period_days=days,
-                data_points=len(weekly_sentiments)
-            )
+            # Save trend data (using the existing _update_sentiment_trends method)
+            # The trend data is already being saved in _update_sentiment_trends
             
             return trend_data
             
@@ -343,7 +436,7 @@ class SentimentTrendAnalyzer:
             week_key = week_start.strftime('%Y-%W')
             
             # Calculate sentiment for this review
-            blob = TextBlob(review.review_text)
+            blob = TextBlob(review.content or '')
             sentiment_score = blob.sentiment.polarity
             
             weekly_data[week_key].append(sentiment_score)
@@ -413,8 +506,8 @@ class SentimentTrendAnalyzer:
             if not sentiment_summary:
                 return None
             
-            # Get trend analysis
-            trend = SentimentTrend.objects.filter(product=product).first()
+            # Get trend analysis (get the most recent trend)
+            trend = SentimentTrend.objects.filter(product=product).order_by('-date').first()
             
             # Get recent reviews for detailed analysis
             recent_reviews = product.reviews.filter(
@@ -428,23 +521,23 @@ class SentimentTrendAnalyzer:
                 'review_stats': sentiment_summary['review_stats'],
                 'aspects': sentiment_summary['aspects'],
                 'trend': {
-                    'direction': trend.trend_direction if trend else 'unknown',
-                    'strength': trend.trend_strength if trend else 0.0,
-                    'volatility': trend.sentiment_volatility if trend else 0.0
+                    'direction': 'stable',  # Simplified for now
+                    'strength': 0.0,
+                    'volatility': 0.0
                 },
                 'recent_reviews': []
             }
             
             # Add recent review insights
             for review in recent_reviews:
-                blob = TextBlob(review.review_text)
+                blob = TextBlob(review.content or '')
                 insights['recent_reviews'].append({
-                    'id': review.id,
-                    'text': review.review_text[:100] + '...' if len(review.review_text) > 100 else review.review_text,
+                    'id': review.uid,
+                    'text': (review.content or '')[:100] + '...' if len(review.content or '') > 100 else (review.content or ''),
                     'sentiment_score': blob.sentiment.polarity,
                     'subjectivity': blob.sentiment.subjectivity,
                     'rating': review.stars,
-                    'date': review.created_at.strftime('%Y-%m-%d')
+                    'date': review.date_added.strftime('%Y-%m-%d')
                 })
             
             return insights
@@ -496,18 +589,30 @@ class SentimentService:
         Get products with highest sentiment scores
         """
         try:
-            if sentiment_type == 'positive':
-                products = SentimentAnalysis.objects.filter(
-                    overall_sentiment='positive'
-                ).order_by('-sentiment_score')[:limit]
-            elif sentiment_type == 'negative':
-                products = SentimentAnalysis.objects.filter(
-                    overall_sentiment='negative'
-                ).order_by('sentiment_score')[:limit]
-            else:
-                products = SentimentAnalysis.objects.all().order_by('-sentiment_score')[:limit]
+            from django.db.models import Avg, Count
             
-            return [analysis.product for analysis in products]
+            # Get products with their average sentiment scores
+            product_sentiments = SentimentAnalysis.objects.filter(
+                review__product__isnull=False
+            ).values('review__product').annotate(
+                avg_sentiment=Avg('sentiment_score'),
+                total_reviews=Count('uid')
+            ).filter(total_reviews__gte=2)  # At least 2 reviews for reliability
+            
+            if sentiment_type == 'positive':
+                product_sentiments = product_sentiments.filter(avg_sentiment__gt=0.1)
+                product_sentiments = product_sentiments.order_by('-avg_sentiment')[:limit]
+            elif sentiment_type == 'negative':
+                product_sentiments = product_sentiments.filter(avg_sentiment__lt=-0.1)
+                product_sentiments = product_sentiments.order_by('avg_sentiment')[:limit]
+            else:
+                product_sentiments = product_sentiments.order_by('-avg_sentiment')[:limit]
+            
+            # Get the actual products
+            product_ids = [ps['review__product'] for ps in product_sentiments]
+            products = Product.objects.filter(uid__in=product_ids)
+            
+            return list(products)
             
         except Exception as e:
             print(f"Error getting top sentiment products: {e}")
@@ -518,20 +623,26 @@ class SentimentService:
         Get insights for a specific aspect across all products
         """
         try:
+            from django.db.models import Avg, Count
+            
+            # Get products with their average aspect sentiment scores
             aspect_sentiments = AspectSentiment.objects.filter(
                 aspect=aspect,
-                total_mentions__gte=3  # Minimum mentions for reliability
-            ).order_by('-sentiment_score')[:limit]
+                review__product__isnull=False
+            ).values('review__product').annotate(
+                avg_sentiment=Avg('sentiment_score'),
+                total_mentions=Count('uid')
+            ).filter(total_mentions__gte=2)  # At least 2 mentions for reliability
+            
+            aspect_sentiments = aspect_sentiments.order_by('-avg_sentiment')[:limit]
             
             insights = []
             for aspect_sentiment in aspect_sentiments:
+                product = Product.objects.get(uid=aspect_sentiment['review__product'])
                 insights.append({
-                    'product': aspect_sentiment.product,
-                    'sentiment_score': aspect_sentiment.sentiment_score,
-                    'positive_mentions': aspect_sentiment.positive_mentions,
-                    'negative_mentions': aspect_sentiment.negative_mentions,
-                    'total_mentions': aspect_sentiment.total_mentions,
-                    'confidence': aspect_sentiment.confidence_score
+                    'product': product,
+                    'sentiment_score': aspect_sentiment['avg_sentiment'],
+                    'total_mentions': aspect_sentiment['total_mentions']
                 })
             
             return insights

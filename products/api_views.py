@@ -510,7 +510,7 @@ def get_collaborative_filtering_stats(request):
         
         # Get behavior statistics
         behavior_counts = UserBehavior.objects.values('behavior_type').annotate(
-            count=Count('id')
+            count=Count('uid')
         )
         
         # Get similarity statistics
@@ -723,7 +723,7 @@ def get_sentiment_stats(request):
         
         # Get sentiment distribution
         sentiment_distribution = SentimentAnalysis.objects.values('overall_sentiment').annotate(
-            count=Count('id')
+            count=Count('uid')
         )
         
         # Get aspect distribution

@@ -130,7 +130,7 @@
             <h2 class="title">{{product.product_name}}</h2>
             <h6 class="text-muted">{{product.category}}</h6>
 
-            <div class="rating-wrap my-3">
+            <!-- <div class="rating-wrap my-3">
               <small class="label-rating text-muted">{{ product.get_rating }}</small>
               <ul class="rating-stars">
                 <li style="width: {{ rating_percentage }}%" class="stars-active">
@@ -148,7 +148,7 @@
               <small class="label-rating text-success">
                 <i class="fa fa-clipboard-check"></i> 154 orders
               </small>
-            </div>
+            </div> -->
 
             <!-- 🌟 Sentiment Analysis Section -->
             {% if sentiment_insights %}
@@ -156,7 +156,7 @@
               <h6 class="mb-3">
                 <i class="fas fa-chart-line text-primary"></i> 
                 Customer Sentiment Analysis
-                <span class="badge bg-primary ms-2">AI Powered</span>
+                <!-- <span class="badge bg-primary ms-2">AI Powered</span> -->
               </h6>
               
               <!-- Overall Sentiment -->
@@ -344,8 +344,7 @@
     <!-- 🎯 AI-Powered Related Products Section -->
     <div class="related-products-section">
       <h3 class="title padding-y-sm">
-        <i class="fas fa-robot text-primary"></i> 
-        AI-Powered Recommendations
+        Recommendations
         <span class="badge bg-primary ms-2">Smart Matching</span>
       </h3>
       

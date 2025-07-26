@@ -44,18 +44,18 @@ class Command(BaseCommand):
     def create_demo_data(self, force=False):
         """Create demo data for the platform"""
         
-        # Create categories
-        categories = ['Men', 'Women', 'Kids', 'Sports', 'Casual', 'Formal', 'Outdoor']
-        # for cat_name in categories:
-        #     Category.objects.get_or_create(category_name=cat_name)
+        # # Create categories
+        # categories = ['Men', 'Women', 'Kids', 'Sports', 'Casual', 'Formal', 'Outdoor']
+        # # for cat_name in categories:
+        # #     Category.objects.get_or_create(category_name=cat_name)
         
-        # Create brands
-        brands = [
-            'Nike', 'Adidas', 'Puma', 'Reebok', 'New Balance', 'Converse', 
-            'Vans', 'Crocs', 'Bata', 'Woodland', 'Sparx', 'Liberty'
-        ]
-        # for brand_name in brands:
-        #     Brand.objects.get_or_create(name=brand_name)
+        # # Create brands
+        # brands = [
+        #     'Nike', 'Adidas', 'Puma', 'Reebok', 'New Balance', 'Converse', 
+        #     'Vans', 'Crocs', 'Bata', 'Woodland', 'Sparx', 'Liberty'
+        # ]
+        # # for brand_name in brands:
+        # #     Brand.objects.get_or_create(name=brand_name)
 
         # Create users if needed
         if User.objects.count() < 10:

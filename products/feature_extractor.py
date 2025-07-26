@@ -244,7 +244,7 @@ class ProductFeatureExtractor:
                 max_count = UserBehavior.objects.filter(
                     behavior_type=behavior_type
                 ).values('product').annotate(
-                    count=Count('id')
+                    count=Count('uid')
                 ).aggregate(max_count=Avg('count'))['max_count'] or 1
                 
                 popularity = min(count / max_count, 1.0)
@@ -253,7 +253,7 @@ class ProductFeatureExtractor:
             # Total behavior popularity
             total_behaviors = behaviors.count()
             max_total = UserBehavior.objects.values('product').annotate(
-                total=Count('id')
+                total=Count('uid')
             ).aggregate(max_total=Avg('total'))['max_total'] or 1
             
             total_popularity = min(total_behaviors / max_total, 1.0)

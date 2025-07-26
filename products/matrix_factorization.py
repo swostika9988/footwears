@@ -44,8 +44,17 @@ class MatrixFactorizationRecommender:
             
             # Initialize factors
             n_users, n_items = R.shape
-            self.user_factors = np.random.normal(0, 0.1, (n_users, self.n_factors))
-            self.item_factors = np.random.normal(0, 0.1, (n_items, self.n_factors))
+            
+            # Determine appropriate number of factors
+            max_factors = min(n_users, n_items, self.n_factors)
+            if max_factors < 2:
+                print(f"MF: Insufficient data (users: {n_users}, items: {n_items}), skipping")
+                return False
+            
+            self.user_factors = np.random.normal(0, 0.1, (n_users, max_factors))
+            self.item_factors = np.random.normal(0, 0.1, (n_items, max_factors))
+            
+            print(f"MF: Fitting with {max_factors} factors (users: {n_users}, items: {n_items})")
             
             # Gradient descent optimization
             for iteration in range(self.n_iterations):
@@ -59,7 +68,7 @@ class MatrixFactorizationRecommender:
                             error = R[i, j] - prediction
                             
                             # Update factors
-                            for k in range(self.n_factors):
+                            for k in range(max_factors):
                                 user_factor_old = self.user_factors[i, k]
                                 item_factor_old = self.item_factors[j, k]
                                 
@@ -171,7 +180,7 @@ class SVDRecommender:
     
     def __init__(self, n_components=50):
         self.n_components = n_components
-        self.svd = TruncatedSVD(n_components=n_components, random_state=42)
+        self.svd = None  # Will be initialized in fit method
         self.user_mapping = {}
         self.item_mapping = {}
         self.reverse_user_mapping = {}
@@ -193,10 +202,22 @@ class SVDRecommender:
             # Convert to numpy array
             R = rating_matrix.values
             
+            # Determine appropriate number of components
+            n_users, n_items = R.shape
+            max_components = min(n_users, n_items, self.n_components)
+            
+            if max_components < 2:
+                print(f"SVD: Insufficient data (users: {n_users}, items: {n_items}), skipping")
+                return False
+            
+            # Initialize SVD with appropriate components
+            self.svd = TruncatedSVD(n_components=max_components, random_state=42)
+            
             # Apply SVD
             self.user_factors = self.svd.fit_transform(R)
             self.item_factors = self.svd.components_.T
             
+            print(f"SVD: Fitted with {max_components} components (users: {n_users}, items: {n_items})")
             return True
             
         except Exception as e:
@@ -280,7 +301,7 @@ class NMFRecommender:
     def __init__(self, n_components=50, max_iter=200):
         self.n_components = n_components
         self.max_iter = max_iter
-        self.nmf = NMF(n_components=n_components, max_iter=max_iter, random_state=42)
+        self.nmf = None  # Will be initialized in fit method
         self.user_mapping = {}
         self.item_mapping = {}
         self.reverse_user_mapping = {}
@@ -302,10 +323,22 @@ class NMFRecommender:
             # Convert to numpy array
             R = rating_matrix.values
             
+            # Determine appropriate number of components
+            n_users, n_items = R.shape
+            max_components = min(n_users, n_items, self.n_components)
+            
+            if max_components < 2:
+                print(f"NMF: Insufficient data (users: {n_users}, items: {n_items}), skipping")
+                return False
+            
+            # Initialize NMF with appropriate components
+            self.nmf = NMF(n_components=max_components, max_iter=self.max_iter, random_state=42)
+            
             # Apply NMF
             self.user_factors = self.nmf.fit_transform(R)
             self.item_factors = self.nmf.components_.T
             
+            print(f"NMF: Fitted with {max_components} components (users: {n_users}, items: {n_items})")
             return True
             
         except Exception as e:
@@ -469,7 +502,10 @@ class MatrixFactorizationService:
             print("Fitting NMF model...")
             nmf_success = self.nmf_recommender.fit(self.rating_matrix)
             
-            return mf_success and svd_success and nmf_success
+            # Return True if at least one model was fitted successfully
+            success_count = sum([mf_success, svd_success, nmf_success])
+            print(f"Successfully fitted {success_count}/3 models")
+            return success_count > 0
             
         except Exception as e:
             print(f"Error fitting models: {e}")
@@ -509,10 +545,10 @@ class MatrixFactorizationService:
         Get hybrid recommendations from all models
         """
         try:
-            # Get recommendations from all models
-            mf_recs = self.mf_recommender.get_recommendations(user.id, limit)
-            svd_recs = self.svd_recommender.get_recommendations(user.id, limit)
-            nmf_recs = self.nmf_recommender.get_recommendations(user.id, limit)
+            # Get recommendations from all models (handle cases where models might not be fitted)
+            mf_recs = self.mf_recommender.get_recommendations(user.id, limit) if hasattr(self.mf_recommender, 'user_factors') and self.mf_recommender.user_factors is not None else []
+            svd_recs = self.svd_recommender.get_recommendations(user.id, limit) if hasattr(self.svd_recommender, 'user_factors') and self.svd_recommender.user_factors is not None else []
+            nmf_recs = self.nmf_recommender.get_recommendations(user.id, limit) if hasattr(self.nmf_recommender, 'user_factors') and self.nmf_recommender.user_factors is not None else []
             
             # Combine recommendations
             all_recs = {}

@@ -472,21 +472,21 @@ class PreferenceAnalyzer:
         # User preferences
         for pref in user_prefs:
             if pref.category:
-                key = f"category_{pref.category.id}"
+                key = f"category_{pref.category.uid}"
                 user_vector[key] = pref.weight
             
             if pref.brand:
-                key = f"brand_{pref.brand.id}"
+                key = f"brand_{pref.brand.uid}"
                 user_vector[key] = pref.weight
         
         # Other user preferences
         for pref in other_prefs:
             if pref.category:
-                key = f"category_{pref.category.id}"
+                key = f"category_{pref.category.uid}"
                 other_vector[key] = pref.weight
             
             if pref.brand:
-                key = f"brand_{pref.brand.id}"
+                key = f"brand_{pref.brand.uid}"
                 other_vector[key] = pref.weight
         
         # Calculate cosine similarity
