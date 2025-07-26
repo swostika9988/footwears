@@ -46,25 +46,32 @@ class Command(BaseCommand):
         
         # Create categories
         categories = ['Men', 'Women', 'Kids', 'Sports', 'Casual', 'Formal', 'Outdoor']
-        for cat_name in categories:
-            Category.objects.get_or_create(category_name=cat_name)
+        # for cat_name in categories:
+        #     Category.objects.get_or_create(category_name=cat_name)
         
         # Create brands
         brands = [
             'Nike', 'Adidas', 'Puma', 'Reebok', 'New Balance', 'Converse', 
             'Vans', 'Crocs', 'Bata', 'Woodland', 'Sparx', 'Liberty'
         ]
-        for brand_name in brands:
-            Brand.objects.get_or_create(name=brand_name)
+        # for brand_name in brands:
+        #     Brand.objects.get_or_create(name=brand_name)
 
         # Create users if needed
-        if User.objects.count() < 20:
-            for i in range(20):
-                User.objects.get_or_create(
+        if User.objects.count() < 10:
+            for i in range(10):
+                user, created = User.objects.get_or_create(
                     username=f'demo_user_{i}',
                     email=f'demo_user_{i}@example.com',
                     defaults={'password': 'demo123456'}
                 )
+                if created:
+                    # Create profile with email verified
+                    from accounts.models import Profile
+                    Profile.objects.get_or_create(
+                        user=user,
+                        defaults={'is_email_verified': True}
+                    )
 
         # Create reviews for products
         products = Product.objects.all()
@@ -122,7 +129,7 @@ class Command(BaseCommand):
                         product=product,
                         defaults={
                             'stars': stars,
-                            'review_text': review_text
+                            'content': review_text
                         }
                     )
 
@@ -170,7 +177,7 @@ class Command(BaseCommand):
     def show_summary(self):
         """Show summary of created data"""
         
-        from products.models import SentclimentAnalysis, AspectSentiment, SentimentTrend, UserSimilarity, ProductSimilarity
+        from products.models import SentimentAnalysis, AspectSentiment, SentimentTrend, UserSimilarity, ProductSimilarity
         
         self.stdout.write('\nDemo Data Summary:')
         self.stdout.write(f'  Users: {User.objects.count()}')
