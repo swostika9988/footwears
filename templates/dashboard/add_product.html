@@ -4,7 +4,8 @@
 {% block content %}
 <style>
   .form-table {
-    width: 60%;
+    width: 80%;           /* increased width */
+    max-width: 900px;     /* max width limit */
     margin: 2rem auto;
     border-collapse: collapse;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -44,63 +45,51 @@
     background-color: #0056b3;
   }
   .error-list {
-    width: 60%;
+    width: 80%;
+    max-width: 900px;
     margin: 1rem auto;
     color: #b00020;
     font-weight: 600;
+  }
+  .success-message {
+    width: 80%;
+    max-width: 900px;
+    margin: 1rem auto;
+    padding: 10px;
+    background-color: #d4edda;
+    color: #155724;
+    border-radius: 5px;
+    font-weight: 600;
+    text-align: center;
   }
 </style>
 
 <h2 style="text-align:center; margin-top: 2rem;">Add New Product</h2>
 
-<form method="POST" enctype="multipart/form-data">
+{% if messages %}
+  {% for message in messages %}
+    <div class="success-message">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data" style="max-width: 900px; margin: auto;">
   {% csrf_token %}
   <table class="form-table">
-    <tr>
-      <th><label for="{{ form.product_name.id_for_label }}">Product Name</label></th>
-      <td>{{ form.product_name }}</td>
-    </tr>
-
-    <tr>
-      <th><label for="{{ form.slug.id_for_label }}">Slug</label></th>
-      <td>{{ form.slug }}</td>
-    </tr>
-
-    <tr>
-      <th><label for="{{ form.category.id_for_label }}">Category</label></th>
-      <td>{{ form.category }}</td>
-    </tr>
-
-    <tr>
-      <th><label for="{{ form.price.id_for_label }}">Price</label></th>
-      <td>{{ form.price }}</td>
-    </tr>
-
-    <tr>
-      <th><label for="{{ form.product_desription.id_for_label }}">Description</label></th>
-      <td>{{ form.product_desription }}</td>
-    </tr>
-
-    <tr>
-      <th>Color Variants</th>
-      <td>{{ form.color_variant }}</td>
-    </tr>
-
-    <tr>
-      <th>Size Variants</th>
-      <td>{{ form.size_variant }}</td>
-    </tr>
-
-    <tr>
-      <th><label for="{{ form.newest_product.id_for_label }}">Newest Product</label></th>
-      <td>{{ form.newest_product }}</td>
-    </tr>
-
-    <tr>
-      <th><label for="{{ images_form.image.id_for_label }}">Product Images</label></th>
-      <td>{{ images_form.image }}</td>
-    </tr>
-
+    <tr><th>Product Name</th><td>{{ form.product_name }}</td></tr>
+    <tr><th>Slug</th><td>{{ form.slug }}</td></tr>
+    <tr><th>Category</th><td>{{ form.category }}</td></tr>
+    <tr><th>Brand</th><td>{{ form.brand }}</td></tr>
+    <tr><th>Price</th><td>{{ form.price }}</td></tr>
+    <tr><th>Discounted Price</th><td>{{ form.discounted_price }}</td></tr>
+    <tr><th>Description</th><td>{{ form.product_desription }}</td></tr>
+    <tr><th>Color Variants</th><td>{{ form.color_variant }}</td></tr>
+    <tr><th>Size Variants</th><td>{{ form.size_variant }}</td></tr>
+    <tr><th>Newest Product</th><td>{{ form.newest_product }}</td></tr>
+    <tr><th>Is Trending?</th><td>{{ form.is_trending }}</td></tr>
+    <tr><th>For Men?</th><td>{{ form.is_men }}</td></tr>
+    <tr><th>For Women?</th><td>{{ form.is_women }}</td></tr>
+    <tr><th>Parent Product (for variant)</th><td>{{ form.parent }}</td></tr>
+    <tr><th>Product Images</th><td>{{ images_form.image }}</td></tr>
     <tr>
       <td colspan="2" style="text-align:center;">
         <button type="submit">Add Product</button>
@@ -114,8 +103,11 @@
     <ul>
       {% for field in form %}
         {% for error in field.errors %}
-          <li>{{ error }}</li>
+          <li><strong>{{ field.label }}:</strong> {{ error }}</li>
         {% endfor %}
+      {% endfor %}
+      {% for error in form.non_field_errors %}
+        <li>{{ error }}</li>
       {% endfor %}
     </ul>
   </div>

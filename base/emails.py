@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 def send_account_activation_email(email, email_token):
     subject = "Your account needs to be verified"
     email_from = settings.DEFAULT_FROM_EMAIL
+    
 
     activation_link = f'http://127.0.0.1:8000/accounts/activate/{email_token}'
 

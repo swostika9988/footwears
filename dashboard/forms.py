@@ -16,17 +16,25 @@ class ProductForm(forms.ModelForm):
             'product_name',
             'slug',
             'category',
+            'brand',
             'price',
-            'product_desription',  # typo consistent with model
+            'discounted_price',
+            'product_desription',
             'color_variant',
             'size_variant',
             'newest_product',
+            'is_trending',
+            'is_men',
+            'is_women',
+            'parent',
         ]
         widgets = {
             'product_desription': forms.Textarea(attrs={'rows': 3}),
             'color_variant': forms.CheckboxSelectMultiple(),
             'size_variant': forms.CheckboxSelectMultiple(),
         }
+
+
 
 class ProductImageForm(forms.ModelForm):
     class Meta:

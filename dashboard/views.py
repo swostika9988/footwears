@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView
+from django.contrib import messages
 from products.models import Product, Category, ProductImage, ProductReview
 from .forms import ProductForm, ProductImageForm, CategoryForm
-
+from .forms import ProductForm, ProductImageForm
 
 # dashboard/views.py
 from django.shortcuts import render
@@ -111,22 +112,27 @@ def delete_product(request, pk):
     return render(request, 'dashboard/delete_product_confirm.html', {'product': product})
 
 
-def add_product(request):
+def add_product_view(request):
     if request.method == 'POST':
         form = ProductForm(request.POST)
         images_form = ProductImageForm(request.POST, request.FILES)
-        files = request.FILES.getlist('image')
 
-        if form.is_valid():
+        if form.is_valid() and images_form.is_valid():
             product = form.save()
 
-            for f in files:
-                ProductImage.objects.create(product=product, image=f)
+            # Save multiple images
+            for image in request.FILES.getlist('image'):
+                ProductImage.objects.create(product=product, image=image)
 
-            return redirect('product_list')
-
+            messages.success(request, "Product added successfully!")
+            return redirect('add_product')  # or 'product_list' if you have that
+        else:
+            messages.error(request, "Please correct the errors below.")
     else:
         form = ProductForm()
         images_form = ProductImageForm()
 
-    return render(request, 'dashboard/add_product.html', {'form': form, 'images_form': images_form})
+    return render(request, 'dashboard/add_product.html', {
+        'form': form,
+        'images_form': images_form,
+    })

@@ -87,7 +87,7 @@
                 </td>
                 <td>
                   <div class="price-wrap">
-                    <var class="price">₹{{ cart_item.get_product_price }} </var>
+                    <var class="price">Rs.{{ cart_item.get_product_price }} </var>
                   </div>
                   <!-- price-wrap .// -->
                 </td>
@@ -168,13 +168,13 @@
             <dl class="dlist-align">
               <dt>Total price:</dt>
               <dd class="text-right">
-                <strong>₹{{ cart.get_cart_total }}</strong>
+                <strong>Rs.{{ cart.get_cart_total }}</strong>
               </dd>
             </dl>
             {% if cart.coupon %}
             <dl class="dlist-align">
               <dt>Discount:</dt>
-              <dd class="text-right">₹{{ cart.coupon.discount_amount }}</dd>
+              <dd class="text-right">Rs.{{ cart.coupon.discount_amount }}</dd>
             </dl>
             <dl class="dlist-align">
               <dt>Total:</dt>
@@ -200,43 +200,64 @@
 
 
  <!-- Modal -->
-  <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="paymentModalLabel">Complete Your Payment</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <!-- Modal Header -->
+      <div class="modal-header bg-black border-bottom-0">
+        <h5 class="modal-title fw-semibold" id="paymentModalLabel">💳 Complete Your Payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- Amount -->
+        <h4 class="mb-3 text-center">
+          Total Amount: <strong class="text-success">Rs. 2,499.00</strong>
+        </h4>
+
+        <!-- Warning -->
+        <div class="alert alert-warning text-center py-2 small fw-semibold" role="alert">
+          ⚠️ Please do not close or refresh this window until the payment is completed.
         </div>
 
-        <div class="modal-body">
-          <h4 class="mb-3">Total Amount: <strong>₹ 2,499.00</strong></h4>
-
-          <p class="warning-text">⚠️ Please do not close this window until the payment is completed.</p>
-
-          <div class="row mt-4 gy-3">
-            <!-- Payment Option 1 -->
-            {% for payment in payment_method %}
-              <div class="col-md-6">
-                <form action="{{ payment.url }}" method="POST" class="payment-option" target="_blank">
-                  {% for key, val in payment.fields.items %}
-                    <input type="hidden" name="{{ key }}" value="{{ val }}">
-                  {% endfor %}
-                  <button type="submit" class="btn btn-outline-success w-100">
-                    {{ payment.button_text }} <i class="fas fa-university ms-2"></i>
-                  </button>
-                </form>
-              </div>
-            {% endfor %}
-
-            <!-- Payment Option 2 -->
+        <!-- Payment Options -->
+        <div class="row g-4 mt-4">
+          <!-- Payment Option 1: Dynamic List -->
+          {% for payment in payment_method %}
             <div class="col-md-6">
-              <a href="{{khalti_formdata.url}}" class="payment-option">
-                <button type="submit" class="btn btn-outline-primary w-100">
-                  Pay with Khalti <i class="fas fa-wallet ms-2"></i>
+              <form action="{{ payment.url }}" method="POST" target="_blank" class="shadow-sm p-3 rounded border bg-white h-100">
+                {% for key, val in payment.fields.items %}
+                  <input type="hidden" name="{{ key }}" value="{{ val }}">
+                {% endfor %}
+                <button type="submit" class="btn btn-success w-100 d-flex align-items-center justify-content-center">
+                  <i class="fas fa-university me-2"></i> {{ payment.button_text }}
                 </button>
-              </a>
+              </form>
             </div>
+          {% endfor %}
+
+          <!-- Payment Option 2: Khalti -->
+          <div class="col-md-6">
+            <a href="{{ khalti_formdata.url }}" target="_blank" class="text-decoration-none">
+              <div class="shadow-sm p-3 rounded border bg-white h-100">
+                <button type="button" class="btn btn-primary w-100 d-flex align-items-center justify-content-center">
+                  <i class="fas fa-wallet me-2"></i> Pay with Khalti
+                </button>
+              </div>
+            </a>
           </div>
+        </div>
+      </div>
+
+      <!-- Optional Footer -->
+      <div class="modal-footer border-0 pt-4">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
         </div>
       </div>
