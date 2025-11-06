@@ -288,7 +288,7 @@
   <div class="row g-4">
     {% for brand in brands %}
     <div class="col-lg-3 col-md-4 col-sm-6">
-      <a href="{% url 'brand_products' brand.uid %}" class="text-decoration-none text-dark">
+      <a href="{% url 'product_search' %}?brand={{ brand.pk }}" class="text-decoration-none text-dark">
         <div class="card border-0 shadow-sm rounded-3 brand-card h-100">
           {% if brand.logo %}
             <img src="{{ brand.logo.url }}" class="card-img-top brand-image" alt="{{ brand.name }}">
