@@ -191,7 +191,7 @@
                             <h5 class="card-title">{{product.product_name}}</h5>
                             <p class="card-text mb-1"><strong>Price:</strong> Rs {{product.price}}</p>
                             <p class="text-success mb-2">Discount: {{ product.discount_percent_annotated }}%</p>
-                            <a href="#" class="btn btn-outline-primary w-100">View Details</a>
+                            <a href="{% url 'get_product' product.slug %}" class="btn btn-outline-primary w-100">View Details</a>
                         </div>
                     </div>
                 </div>

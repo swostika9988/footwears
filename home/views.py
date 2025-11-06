@@ -8,6 +8,7 @@ from products.recommendation_engine import RecommendationService
 from products.sentiment_analyzer import SentimentService
 # Create your views here.
 import json
+import difflib
 
 
 def index(request):
@@ -135,7 +136,38 @@ def product_search(request):
         filters &= Q(created_at__lte=parse_datetime(get.get('created_before')))
 
     # Base product queryset
-    products = Product.objects.filter(filters).annotate(
+    base_qs = Product.objects.filter(filters)
+
+    # Fuzzy title search when 'q' parameter present (optimized for SQLite):
+    # Uses a combined icontains + limited in-memory SequenceMatcher check to match by characters
+    q_param = get.get('q') if 'q' in get else None
+    q_text = q_param.strip() if q_param else None
+
+    if q_text:
+        # Fallback: include exact-ish substring matches and also check a limited candidate set
+        icontains_ids = list(base_qs.filter(product_name__icontains=q_text).values_list('pk', flat=True))
+
+        # Limit candidates by prefix to avoid scanning entire table in Python
+        prefix = q_text[:3]
+        # only load product_name to reduce memory; use pk when collecting ids
+        candidates = list(base_qs.filter(product_name__istartswith=prefix).only('product_name')[:500])
+        close_ids = []
+        for p in candidates:
+            try:
+                ratio = difflib.SequenceMatcher(None, q_text.lower(), p.product_name.lower()).ratio()
+            except Exception:
+                ratio = 0
+            # threshold 0.6 is a reasonable default for short query strings
+            if ratio >= 0.6:
+                close_ids.append(p.pk)
+
+        # Combine the ids found by both strategies
+        combined_ids = set(icontains_ids) | set(close_ids)
+        products_qs = base_qs.filter(pk__in=list(combined_ids))
+    else:
+        products_qs = base_qs
+
+    products = products_qs.annotate(
         discount_percent_annotated=ExpressionWrapper(
             100 * (F('price') - F('discounted_price')) / F('price'),
             output_field=IntegerField()

@@ -12,37 +12,19 @@
   <!-- Scrollable Wrapper -->
  <div class="overflow-hidden px-5">
   <div id="categorySliderInner" class="d-flex transition" style="width: max-content; gap: 2rem;">
+    {% for item in categories %}
+    {% if item.category_image %}
     
-    <div class="text-center category-item" data-category="men" style="min-width: 180px; cursor:pointer;">
-      <img src="{% static 'images/category/men.png' %}" width="100" class="mb-2" alt="Men's Footwear">
-      <div class="fw-semibold">Men's footwear</div>
-    </div>
+    <a href="{% url 'product_search' %}?category={{ item.pk }}" style="color: inherit; text-decoration: none;">
+      <div class="text-center category-item" data-category="{{ item.category_name }}" style="min-width: 180px; cursor:pointer;">
+        <img src="{{item.category_image.url}}" width="100" class="mb-2" alt="{{ item.category_name }}">
+        <div class="fw-semibold">{{item.category_name}}</div>
+      </div>
+    </a>
+    {% endif %}
+    {% endfor %}
 
-    <div class="text-center category-item" data-category="women" style="min-width: 180px; cursor:pointer;">
-      <img src="{% static 'images/category/women.png' %}" width="100" class="mb-2" alt="Women's Footwear">
-      <div class="fw-semibold">Women's footwear</div>
-    </div>
-
-    <div class="text-center category-item" data-category="kids" style="min-width: 180px; cursor:pointer;">
-      <img src="{% static 'images/category/kids.png' %}" width="100" class="mb-2" alt="Kids Footwear">
-      <div class="fw-semibold">Kids footwear</div>
-    </div>
-
-    <div class="text-center category-item" data-category="sport" style="min-width: 180px; cursor:pointer;">
-      <img src="{% static 'images/category/sport.png' %}" width="100" class="mb-2" alt="Sports Shoes">
-      <div class="fw-semibold">Sports shoes</div>
-    </div>
-
-    <div class="text-center category-item" data-category="accessories" style="min-width: 180px; cursor:pointer;">
-      <img src="{% static 'images/category/shoe.png' %}" width="100" class="mb-2" alt="Accessories">
-      <div class="fw-semibold">Shoe accessories</div>
-    </div>
-
-    <div class="text-center category-item" data-category="premium" style="min-width: 180px; cursor:pointer;">
-      <img src="{% static 'images/category/preminum.png' %}" width="100" class="mb-2" alt="Premium">
-      <div class="fw-semibold">Premium footwear</div>
-    </div>
-
+    
   </div>
 </div>
 
