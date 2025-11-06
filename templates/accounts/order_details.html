@@ -10,9 +10,9 @@
       <main class="col-md-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h3 class="mb-0">Order Summary</h3>
-          <a href="{% url 'download_invoice' order.order_id %}" class="btn btn-success">
+          <!--<a href="{% url 'download_invoice' order.order_id %}" class="btn btn-success">
             Download Invoice
-          </a>
+          </a> -->
         </div>
         <div class="table-responsive mb-4">
           <table class="table table-striped table-bordered">
@@ -32,9 +32,13 @@
                   {{ item.product.product_name }}</a></td>
                 <td>{{ item.size_variant.size_name|default:"N/A" }}</td>
                 {% if item.size_variant %}
-                  {% for color in item.product.color_variant.all %}
-                    <td>{{ color.color_name|default:"N/A" }}</td>
-                  {% endfor %}
+                  <td>
+                {% if item.color_variant %}
+               {{ item.color_variant.color_name }}
+                {% else %}
+               {{ item.product.color_variant.all|join:", " }}
+                {% endif %}
+                </td>
                 {% endif %}
                 <td>{{ item.quantity }}</td>
                 <td>Rs. {{ item.product_price }}</td>

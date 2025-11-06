@@ -1,5 +1,5 @@
 from django import forms
-from products.models import Product, ProductImage, Category
+from products.models import Product, ProductImage, Category, ProductReview
 
 class MultiImageInput(forms.ClearableFileInput):
     allow_multiple_selected = True  # Django 4.2+ supports this flag
@@ -56,4 +56,14 @@ class CategoryForm(forms.ModelForm):
             'category_image': forms.ClearableFileInput(attrs={
                 'class': 'form-control',
             }),
+        }
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = ProductReview
+        fields = ['stars', 'content']
+        widgets = {
+            'stars': forms.NumberInput(attrs={'min': 1, 'max': 5, 'class': 'form-control'}),
+            'content': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
         }

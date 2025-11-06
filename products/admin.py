@@ -25,8 +25,10 @@ class ProductAdmin(admin.ModelAdmin):
     def get_rating_display(self, obj):
         rating = obj.get_rating()
         if rating > 0:
-            return format_html('<span style="color: green;">★ {:.1f}</span>', rating)
+            formatted_rating = "{:.1f}".format(rating)  # format the float first
+            return format_html('<span style="color: green;">★ {}</span>', formatted_rating)
         return format_html('<span style="color: gray;">No ratings</span>')
+
     get_rating_display.short_description = 'Rating'
 
 @admin.register(ColorVariant)

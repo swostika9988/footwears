@@ -4,6 +4,7 @@ from django.contrib import messages
 from products.models import Product, Category, ProductImage, ProductReview
 from .forms import ProductForm, ProductImageForm, CategoryForm
 from .forms import ProductForm, ProductImageForm
+from .forms import ReviewForm
 
 # dashboard/views.py
 from django.shortcuts import render
@@ -115,24 +116,44 @@ def delete_product(request, pk):
 def add_product_view(request):
     if request.method == 'POST':
         form = ProductForm(request.POST)
-        images_form = ProductImageForm(request.POST, request.FILES)
+        files = request.FILES.getlist('image')  # get all uploaded images
 
-        if form.is_valid() and images_form.is_valid():
+        if form.is_valid():
             product = form.save()
 
-            # Save multiple images
-            for image in request.FILES.getlist('image'):
+            for image in files:
                 ProductImage.objects.create(product=product, image=image)
 
             messages.success(request, "Product added successfully!")
-            return redirect('add_product')  # or 'product_list' if you have that
+            return redirect('add_product')  # or redirect to 'product_list'
         else:
             messages.error(request, "Please correct the errors below.")
     else:
         form = ProductForm()
-        images_form = ProductImageForm()
+
+    images_form = ProductImageForm()  # Just for rendering multiple file input
 
     return render(request, 'dashboard/add_product.html', {
         'form': form,
         'images_form': images_form,
     })
+
+def edit_review(request, pk):
+    review = get_object_or_404(ProductReview, pk=pk)
+    if request.method == 'POST':
+        form = ReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Review updated successfully.")
+            return redirect('dashboard_reviews')
+    else:
+        form = ReviewForm(instance=review)
+    return render(request, 'dashboard/edit_review.html', {'form': form})
+    
+def delete_review(request, pk):
+    review = get_object_or_404(ProductReview, pk=pk)
+    if request.method == 'POST':
+        review.delete()
+        messages.success(request, "Review deleted successfully.")
+        return redirect('dashboard_reviews')
+    return render(request, 'dashboard/delete_review_confirm.html', {'review': review})

@@ -1,0 +1,66 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Edit Review{% endblock %}
+{% block content %}
+<style>
+  form {
+    max-width: 600px;
+    margin: 3rem auto;
+    background: #fff;
+    padding: 2rem 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    color: #333;
+    letter-spacing: 1px;
+  }
+  label {
+    font-weight: 600;
+    margin-top: 1rem;
+    display: block;
+    color: #555;
+  }
+  textarea, input[type="number"], input[type="text"] {
+    width: 100%;
+    padding: 10px 14px;
+    margin-top: 0.3rem;
+    border-radius: 6px;
+    border: 1.8px solid #ccc;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  textarea:focus, input[type="number"]:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: #0dcaf0;
+    box-shadow: 0 0 8px rgba(13, 202, 240, 0.4);
+  }
+  .btn-primary {
+    display: block;
+    width: 100%;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    padding: 12px 0;
+    margin-top: 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .btn-primary:hover {
+    background-color: #0b5ed7;
+  }
+</style>
+
+<h2>Edit Product Review</h2>
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Update Review</button>
+</form>
+{% endblock %}

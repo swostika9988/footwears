@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from .views import add_category, ProductListView, add_product_view, categories, dashboard_reviews
+from uuid import UUID
 
 urlpatterns = [
     path('', views.dashboard_home, name='dashboard'),
@@ -17,5 +18,8 @@ urlpatterns = [
     path('dashboard/products/delete/<uuid:pk>/', views.delete_product, name='dashboard_delete_product'),
     path('add-product/', add_product_view, name='add_product'),
 # Review route
-    path('reviews/', dashboard_reviews, name='dashboard_reviews'),
+    #path('reviews/', dashboard_reviews, name='dashboard_reviews'),
+    path('reviews/', views.dashboard_reviews, name='dashboard_reviews'),
+    path('reviews/edit/<uuid:pk>/', views.edit_review, name='edit_review'),
+    path('reviews/delete/<uuid:pk>/', views.delete_review, name='delete_review'),
 ]

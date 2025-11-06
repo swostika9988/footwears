@@ -6,68 +6,122 @@
 <style>
   .reviews-container {
     max-width: 1000px;
-    margin: 2rem auto;
-    background: #f9f9f9;
-    padding: 1.5rem 2rem;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    margin: 3rem auto;
+    background: #ffffff;
+    padding: 2rem 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
   .reviews-container h2 {
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 1.5rem;
+    font-weight: 800;
+    color: #222;
+    margin-bottom: 2rem;
     text-align: center;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
   table.table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 10px;
+    border-spacing: 0 14px;
   }
   thead.table-dark {
     background-color: #343a40;
-    color: #fff;
-    border-radius: 8px;
+    color: #f0f0f0;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   }
   thead.table-dark th {
-    padding: 12px 15px;
-    font-weight: 600;
-    letter-spacing: 0.03em;
+    padding: 15px 20px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.95rem;
   }
   tbody tr {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    background: #fafafa;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: default;
   }
   tbody tr:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    transform: translateY(-6px);
+    box-shadow: 0 15px 25px rgba(0,0,0,0.12);
+    background-color: #e9f5ff;
   }
   tbody td {
-    padding: 14px 15px;
+    padding: 18px 20px;
     vertical-align: middle;
-    color: #555;
+    color: #444;
     border-top: none;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
   }
   tbody td a {
     color: #007bff;
     text-decoration: none;
     font-weight: 600;
+    transition: color 0.3s ease;
   }
   tbody td a:hover {
     text-decoration: underline;
+    color: #0056b3;
   }
   tbody td[title] {
     cursor: help;
   }
+
+  /* Action buttons container */
+  .action-buttons {
+    display: flex;
+    gap: 10px; /* space between buttons */
+  }
+
+  /* Individual buttons */
+  .action-buttons a {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #fff;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .btn-edit {
+    background: linear-gradient(135deg, #4fc3f7, #0288d1);
+  }
+  .btn-delete {
+    background: linear-gradient(135deg, #ff6b6b, #c62828);
+  }
+  .btn-edit:hover {
+    background: linear-gradient(135deg, #0288d1, #01579b);
+    box-shadow: 0 6px 12px rgba(2, 136, 209, 0.6);
+  }
+  .btn-delete:hover {
+    background: linear-gradient(135deg, #c62828, #8e0000);
+    box-shadow: 0 6px 12px rgba(142, 0, 0, 0.6);
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .reviews-container {
-      padding: 1rem;
+      padding: 1.5rem 1.2rem;
     }
     thead.table-dark th, tbody td {
-      padding: 10px 8px;
+      padding: 12px 10px;
+      font-size: 0.9rem;
+    }
+    .action-buttons {
+      gap: 6px;
+    }
+    .action-buttons a {
+      padding: 6px 10px;
+      font-size: 0.85rem;
     }
   }
 </style>
@@ -85,6 +139,7 @@
           <th>Rating</th>
           <th>Comment</th>
           <th>Date</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -99,6 +154,10 @@
           <td>{{ review.stars }}/5</td>
           <td title="{{ review.content }}">{{ review.content|truncatechars:50 }}</td>
           <td>{{ review.date_added|date:"M d, Y H:i" }}</td>
+          <td class="action-buttons">
+            <a href="{% url 'edit_review' review.pk %}" class="btn-edit">Edit</a>
+            <a href="{% url 'delete_review' review.pk %}" class="btn-delete">Delete</a>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
